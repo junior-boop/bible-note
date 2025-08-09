@@ -6,6 +6,7 @@ export const createdNote = Events.synced({
     id: Schema.String,
     body: Schema.String,
     creator: Schema.String,
+    pinted: Schema.Boolean,
     archived: Schema.Boolean,
     grouped: Schema.String,
     created: Schema.DateFromNumber,
@@ -43,5 +44,13 @@ export const groupedLink = Events.synced({
   schema: Schema.Struct({
     id: Schema.String,
     grouped: Schema.String,
+  }),
+});
+
+export const pintingNote = Events.synced({
+  name: "v1.pintingNote",
+  schema: Schema.Struct({
+    id: Schema.String,
+    pinted: Schema.Boolean,
   }),
 });

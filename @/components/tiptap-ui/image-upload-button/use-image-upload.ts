@@ -57,7 +57,6 @@ export function canInsertImage(editor: Editor | null): boolean {
  */
 export function isImageActive(editor: Editor | null): boolean {
   if (!editor || !editor.isEditable) return false;
-  console.log(editor);
   return editor.isActive("imageUpload");
 }
 

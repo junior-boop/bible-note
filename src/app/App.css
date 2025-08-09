@@ -1,0 +1,14 @@
+div,
+p,
+span,
+em {
+    color: #555;
+
+}
+
+.column {
+    column-span: all;
+    column-count: auto;
+    column-width: 250px;
+    column-fill: balance;
+}

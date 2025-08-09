@@ -42,6 +42,8 @@ const materializers = State.SQLite.materializers(events, {
     tables.notes.update({ archived: archived }).where({ id }),
   "v1.GroupeLink": ({ id, grouped }) =>
     tables.notes.update({ grouped }).where({ id }),
+  "v1.pintingNote": ({ id, pinted }) =>
+    tables.notes.update({ pinted }).where({ id }),
 });
 
 const state = State.SQLite.makeState({ tables, materializers });

@@ -5,6 +5,7 @@ export const notes = State.SQLite.table({
   columns: {
     id: State.SQLite.text({ primaryKey: true }),
     body: State.SQLite.text({ default: "" }),
+    pinted: State.SQLite.boolean({ default: false }),
     creator: State.SQLite.text({ default: "" }),
     archived: State.SQLite.boolean({ default: false }),
     grouped: State.SQLite.text({ nullable: true }),

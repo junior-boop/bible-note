@@ -1,6 +1,6 @@
 import * as React from "react"
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react"
-
+import { Editor, EditorContent, EditorContext, useEditor, } from "@tiptap/react"
+import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus"
 // --- Tiptap Core Extensions ---
 import { StarterKit } from "@tiptap/starter-kit"
 import { Image } from "@tiptap/extension-image"
@@ -70,25 +70,35 @@ import { handleImageUpload, MAX_FILE_SIZE } from "../../../lib/tiptap-utils"
 
 // --- Styles ---
 import "../../tiptap-templates/simple/simple-editor.scss"
-
-import content from "../../tiptap-templates/simple/data/content.json"
+import { BibleButton } from "../../../../src/communs/ui/bible_component/Bibleverset"
 
 const MainToolbarContent = ({
   onHighlighterClick,
-  onLinkClick,
+  // onLinkClick,
   isMobile,
+  editor
 }: {
+  editor?: Editor,
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
 }) => {
+
+  const [openVerset, setOpenVerset] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState<string>("")
+
+  const handleBibleVerset = () => {
+    editor?.commands.setVerset({ entry: inputValue })
+    setOpenVerset(false)
+    setInputValue('')
+  }
   return (
     <>
       <Spacer />
 
       <ToolbarGroup>
         <UndoRedoButton action="undo" />
-        <UndoRedoButton action="redo" />
+        {/* <UndoRedoButton action="redo" /> */}
       </ToolbarGroup>
 
       <ToolbarSeparator />
@@ -110,6 +120,65 @@ const MainToolbarContent = ({
         <MarkButton type="italic" />
         {/* <MarkButton type="strike" /> */}
         {/* <MarkButton type="code" /> */}
+        {/* <MarkButton type="underline" /> */}
+        {!isMobile ? (
+          <ColorHighlightPopover />
+        ) : (
+          <ColorHighlightPopoverButton onClick={onHighlighterClick} />
+        )}
+        {/* {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />} */}
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      {/* <ToolbarGroup>
+        <MarkButton type="superscript" />
+        <MarkButton type="subscript" />
+      </ToolbarGroup> */}
+
+      {/* <ToolbarSeparator /> */}
+
+      <ToolbarGroup>
+        <TextAlignButton align="left" />
+        <TextAlignButton align="center" />
+        <TextAlignButton align="right" />
+      </ToolbarGroup>
+
+      <ToolbarSeparator />
+
+      <ToolbarGroup>
+        <ImageUploadButton text="Add" />
+      </ToolbarGroup>
+      <ToolbarGroup>
+        {/* <ImageUploadButton text="Add" /> */}
+        <BibleButton />
+      </ToolbarGroup>
+      {/* <ToolbarGroup>
+        <div className={`h-[52px] absolute w-full bg-slate-200 flex transition-all duration-300 z-[-1] ${openVerset ? "top-[-52px]" : "top-[0]"}`}>
+          <input value={inputValue} onChange={({ target }) => setInputValue(target.value)} type="text" className='flex-1 h-full px-4 outline-none' placeholder='Votre verset' />
+          <button onClick={handleBibleVerset} className=' aspect-square flex items-center justify-center actived:bg-slate-300' style={{ height: 52, aspectRatio: 1 }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M13 7.828V20h-2V7.828l-5.364 5.364l-1.414-1.414L12 4l7.778 7.778l-1.414 1.414z" /></svg>
+          </button>
+        </div>
+      </ToolbarGroup> */}
+
+      {isMobile && <ToolbarSeparator />}
+
+      {/* <ToolbarGroup>
+        <ThemeToggle />
+      </ToolbarGroup> */}
+    </>
+  )
+}
+
+const MenuFlottant = ({ editor, onHighlighterClick, onLinkClick, isMobile }: { editor: Editor, isMobile: boolean, onHighlighterClick: () => void, onLinkClick: () => void }) => {
+  return (
+    <BubbleMenu editor={editor} className="flex items-center px-1 bg-white border-slate-100 border rounded-xl shadow-md" >
+      <ToolbarGroup>
+        <MarkButton type="bold" />
+        <MarkButton type="italic" />
+        <MarkButton type="strike" />
+        <MarkButton type="code" />
         <MarkButton type="underline" />
         {!isMobile ? (
           <ColorHighlightPopover />
@@ -118,37 +187,28 @@ const MainToolbarContent = ({
         )}
         {!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
       </ToolbarGroup>
-
       <ToolbarSeparator />
 
       <ToolbarGroup>
         <MarkButton type="superscript" />
         <MarkButton type="subscript" />
       </ToolbarGroup>
+    </BubbleMenu>
+  )
+}
 
-      <ToolbarSeparator />
-
+const StartingMenu = ({ editor, isMobile }: { editor: Editor, isMobile: boolean }) => {
+  return (
+    <FloatingMenu editor={editor} className="border-slate-200 border rounded-lg ">
       <ToolbarGroup>
-        <TextAlignButton align="left" />
-        <TextAlignButton align="center" />
-        <TextAlignButton align="right" />
-        <TextAlignButton align="justify" />
-      </ToolbarGroup>
-
-      <ToolbarSeparator />
-
-      <ToolbarGroup>
-        <ImageUploadButton text="Add" />
-      </ToolbarGroup>
-
-      <Spacer />
-
-      {isMobile && <ToolbarSeparator />}
-
-      {/* <ToolbarGroup>
-        <ThemeToggle />
-      </ToolbarGroup> */}
-    </>
+        <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
+        <ListDropdownMenu
+          types={["bulletList", "orderedList", "taskList"]}
+          portal={isMobile}
+        />
+        <BlockquoteButton />
+        {/* <CodeBlockButton /> */}
+      </ToolbarGroup></FloatingMenu>
   )
 }
 
@@ -181,7 +241,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor() {
+export function SimpleEditor({ onChange, content }: { content: string, onChange: (data: string) => void }) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -227,7 +287,10 @@ export function SimpleEditor() {
         onError: (error) => console.error("Upload failed:", error),
       }),
     ],
-    content,
+    content: JSON.parse(content),
+    onUpdate: (data) => {
+      onChange(JSON.stringify(data.editor.getJSON()))
+    }
   })
 
   const rect = useCursorVisibility({
@@ -240,6 +303,8 @@ export function SimpleEditor() {
       setMobileView("main")
     }
   }, [isMobile, mobileView])
+
+  // console.log("Editor content:", content)
 
   return (
     <div className="simple-editor-wrapper">
@@ -259,6 +324,7 @@ export function SimpleEditor() {
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
+              editor={editor}
             />
           ) : (
             <MobileToolbarContent
@@ -273,6 +339,9 @@ export function SimpleEditor() {
           role="presentation"
           className="simple-editor-content"
         />
+
+        <MenuFlottant editor={editor} />
+        <StartingMenu editor={editor} isMobile={isMobile} />
       </EditorContext.Provider>
     </div>
   )
