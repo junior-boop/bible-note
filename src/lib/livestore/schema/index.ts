@@ -23,12 +23,7 @@ const materializers = State.SQLite.materializers(events, {
       modified: data.modified,
       grouped: data.grouped,
     }),
-  "v1.DeletedNote": (data) =>
-    tables.notes
-      .update({
-        deleted: data.deleted,
-      })
-      .where({ id: data.id }),
+  "v1.DeletedNote": (data) => tables.notes.delete().where({ id: data.id }),
   "v1.ModifiedNote": (data) =>
     tables.notes
       .update({

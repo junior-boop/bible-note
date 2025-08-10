@@ -53,6 +53,7 @@ function NewNote() {
             grouped: '',
             created: new Date(),
             modified: new Date(),
+            deleted: null,
             creator: "00000", // Replace with actual user ID
         }
 

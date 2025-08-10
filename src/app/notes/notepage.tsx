@@ -10,6 +10,9 @@ export default function EditorPage() {
     const { store } = useStore()
     const { id } = useParams()
     const location = useLocation()
+    const [isTyping, setIsTyping] = useState(false)
+    const [savingState, setSavingState] = useState('Enregistrement...')
+
 
 
 
@@ -18,39 +21,47 @@ export default function EditorPage() {
         if (contentBody) {
             setContent(contentBody)
         }
+    }, [])
 
-        const d = store.query(tables.notes.select().where({ id: id as string }))
-        console.log("EditorPage content loaded", d)
+
+    useEffect(() => {
+
+        const t1 = setTimeout(() => {
+            console.log("active")
+            store.commit(events.modifiedNote({
+                id: id as string,
+                body: content,
+                modified: new Date(),
+            }))
+            setSavingState("Enregistré!")
+            setIsTyping(false)
+        }, 5000)
+
+
+        const t2 = setTimeout(() => {
+            console.log("desactive")
+            setSavingState("Enregistrement...")
+        }, 500)
+
+
+        return () => {
+            clearTimeout(t1)
+            clearTimeout(t2)
+        }
+
     }, [content])
-
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //         store.commit(events.modifiedNote({
-    //             id: id as string,
-    //             body: content,
-    //             modified: new Date(),
-    //         }))
-    //         // console.log("EditorPage content saved", content)
-    //     }, 5000)
-
-    //     return () => clearTimeout(timer);
-    // }, [content])
 
     return (
         <div className="flex-1 overflow-hidden w-full h-full">
             {
                 content.length > 0 && (
                     <SimpleEditor content={content} onChange={(data) => {
+                        setIsTyping(true)
                         setContent(data)
-                        console.log("EditorPage content changed", data)
-                        store.commit(events.modifiedNote({
-                            id: id as string,
-                            body: data,
-                            modified: new Date(),
-                        }))
                     }} />
                 )
             }
         </div>
     )
 }
+

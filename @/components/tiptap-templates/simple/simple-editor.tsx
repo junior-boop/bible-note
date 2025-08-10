@@ -199,7 +199,7 @@ const MenuFlottant = ({ editor, onHighlighterClick, onLinkClick, isMobile }: { e
 
 const StartingMenu = ({ editor, isMobile }: { editor: Editor, isMobile: boolean }) => {
   return (
-    <FloatingMenu editor={editor} className="border-slate-200 border rounded-lg ">
+    <FloatingMenu editor={editor} className="border-slate-200 border rounded-lg realtive">
       <ToolbarGroup>
         <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
         <ListDropdownMenu
@@ -207,7 +207,7 @@ const StartingMenu = ({ editor, isMobile }: { editor: Editor, isMobile: boolean 
           portal={isMobile}
         />
         <BlockquoteButton />
-        {/* <CodeBlockButton /> */}
+        <CodeBlockButton />
       </ToolbarGroup></FloatingMenu>
   )
 }
@@ -342,6 +342,7 @@ export function SimpleEditor({ onChange, content }: { content: string, onChange:
 
         <MenuFlottant editor={editor} />
         <StartingMenu editor={editor} isMobile={isMobile} />
+        <div className="h-[100px]"></div>
       </EditorContext.Provider>
     </div>
   )
