@@ -1,16 +1,16 @@
 import { makeSchema, State } from "@livestore/livestore";
 
 import * as EventsNote from "../events";
-
 import { type Notes, notes } from "./note";
+import { groupes, type Groupes } from "./groupes";
 
-export { notes, type Notes };
+export { notes, groupes, type Notes, type Groupes };
 
 export const events = {
   ...EventsNote,
 };
 
-export const tables = { notes };
+export const tables = { notes, groupes };
 
 const materializers = State.SQLite.materializers(events, {
   "v1.CreatedNote": (data) =>
@@ -39,6 +39,16 @@ const materializers = State.SQLite.materializers(events, {
     tables.notes.update({ grouped }).where({ id }),
   "v1.pintingNote": ({ id, pinted }) =>
     tables.notes.update({ pinted }).where({ id }),
+  "v1.createGroup": ({ id, created, modified, name }) =>
+    tables.groupes.insert({
+      id: id,
+      name,
+      created,
+      modified,
+    }),
+  "v1.modifyGroup": ({ id, modified, name }) =>
+    tables.groupes.update({ name, modified }).where({ id }),
+  "v1.deleteGroup": ({ id }) => tables.groupes.delete().where({ id }),
 });
 
 const state = State.SQLite.makeState({ tables, materializers });

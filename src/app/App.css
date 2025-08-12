@@ -45,3 +45,16 @@ em {
 button {
     text-align: left !important;
 }
+
+.dossierItem {
+
+    .itemsMenu {
+        opacity: 0;
+        transition: all ease-in-out 0.3s;
+
+    }
+
+    &:hover .itemsMenu {
+        opacity: 1;
+    }
+}

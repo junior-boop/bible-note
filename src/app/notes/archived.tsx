@@ -8,18 +8,15 @@ import { useStore } from '@livestore/react'
 import { tables, type Notes } from "../../lib/livestore/schema";
 import Noteliste from "../../communs/ui/NotesListe";
 
-export default function NotesPages() {
+export default function ArchivePages() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
 
     const { store } = useStore()
     const notes = store.useQuery(
-        queryDb(tables.notes.orderBy('modified', 'desc').where('archived', false).where('pinted', false)),
+        queryDb(tables.notes.orderBy('modified', 'desc').where('archived', true)),
     )
 
-    const notePinned = store.useQuery(
-        queryDb(tables.notes.orderBy('modified', 'desc').where('archived', false).where('pinted', true)),
-    )
     const handlesearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
         if (e.target.value.length > 0) {
@@ -42,23 +39,14 @@ export default function NotesPages() {
                 <input type="text" placeholder="Search notes..." className="focus:outline-none focus:ring-0" onChange={handlesearchChange} value={searchQuery} />
             </div>
             <div className="p-4 overflow-y-auto h-[calc(100dvh-64px)]">
-                <Title title="Notes" />
+                <Title title="Archives" />
                 <div>
-                    La liste des notes sera affichée ici.
+                    La liste des notes archivées ici.
                 </div>
 
                 {
-                    notePinned.length > 0 && (<>
-                        <div className="mt-8"><Subtitle title="Notes épinglés" /></div>
-                        <div>
-                            <Noteliste data={notePinned as Notes[]} />
-                        </div>
-                    </>)
-                }
-
-                {
                     notes.length > 0 && (<>
-                        <div className="mt-8"><Subtitle title="Autres" /></div>
+                        <div className="mt-8"></div>
                         <div>
                             <Noteliste data={notes as Notes[]} />
                         </div>
@@ -66,7 +54,7 @@ export default function NotesPages() {
                 }
 
                 {notes.length === 0 && (<div className="mt-8 h-[100px] w-full flex items-center px-10 border-dashed border rounded-xl">
-                    <div>Cliquez sur le bouton <b>"Ajouter une note"</b> pour commencer a écrire les notes</div>
+                    <div>Cliquez sur le bouton <b>"Ajouter une note"</b> pour commencer a ecrire les notes</div>
                 </div>)}
             </div>
         </div>

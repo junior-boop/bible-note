@@ -1,22 +1,25 @@
 import { useEffect, useState } from "react";
-import { FluentMoreHorizontal32Regular, FluentPin32Filled, FluentPin32Regular } from "../../lib/icons";
+import { FluentDelete32Regular, FluentMoreHorizontal32Regular, FluentPin32Filled, FluentPin32Regular } from "../../lib/icons";
 import { events, type Notes } from "../../lib/livestore/schema";
 import { useStore } from '@livestore/react'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function NoteItems({ data }: { data: Notes }) {
     const [pin, setPin] = useState(false);
     const { id, body } = data;
     const [openMenu, setOpenMenu] = useState(false)
     const content = JSON.parse(body || "{}") as { content: { type: string, content: { type: string, text: string }[] }[] } || {};
+    const [isHome, setIshome] = useState(false)
+
 
     const heading = (d: { text: string }) => <div className="font-semibold">{d.text}</div>;
     const paragraph = (d: { text: string }) => <p className="mb-0">{d.text}</p>;
-    const titre = (d: { text: string }) => <div className="text-base mb-2">{d.text}</div>
+    const titre = (d: { text: string }) => <div className="text-base mb-2 font-semibold">{d.text}</div>
 
     const { store } = useStore();
 
     const navigate = useNavigate()
+    const location = useLocation();
 
     const textContent = content.content?.map((item, i) => {
         if (i === 0 && item.type === "heading") {
@@ -78,35 +81,55 @@ export default function NoteItems({ data }: { data: Notes }) {
     }
     // console.log("NoteItems data", textContent);
 
+    useEffect(() => {
+        const locationNote = location.pathname === "/"
+
+        if (locationNote) {
+            setIshome(true)
+        } else setIshome(false)
+    }, [])
+
     return (
         <div className="noteitems p-4 text-[14px] bg-slate-50 mb-4 w-[256px] rounded-xl max-h-[425px]  relative">
 
             <div className="noteovermouse absolute top-0 left-0  w-full z-[5] ">
                 <div className="relative h-full w-full bg-slate-50">
-                    <button onClick={handlePinToggle} className="absolute top-4 right-12 text-xs text-gray-500">
+                    <div className="absolute flex items-center gap-4 top-3 right-3 p-2 bg-slate-200 rounded-xl">
                         {
-                            pin ? (
-                                <FluentPin32Filled className="w-5 h-5 text-blue-500" />
-                            ) : (
-                                <FluentPin32Regular className="w-5 h-5" />
-                            )}
-                    </button>
-                    <button onClick={() => setOpenMenu(!openMenu)} className="absolute top-4 right-4 text-xs text-gray-500">
-                        <FluentMoreHorizontal32Regular className="w-5 h-5 rotate-90" />
-                        <div className="relative">
-                            <div className=" absolute top-0 right-[-50%] w-[150px] border border-slate-200 bg-white rounded-md shadow-md">
-                                <ul className="py-1 w-full">
-                                    <button onClick={handleArchiver} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Archiver</li></button>
-                                    <button onClick={handleDelete} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Supprimer</li></button>
+                            isHome && (<button onClick={handlePinToggle} className="text-xs text-gray-700">
+                                {
+                                    pin ? (
+                                        <FluentPin32Filled className="w-5 h-5 text-blue-500" />
+                                    ) : (
+                                        <FluentPin32Regular className="w-5 h-5" />
+                                    )}
+                            </button>)
+                        }
+                        {
+                            isHome
+                                ? (<button onClick={() => setOpenMenu(!openMenu)} className="text-xs text-gray-700">
+                                    <FluentMoreHorizontal32Regular className="w-5 h-5 rotate-90" />
+                                    {
+                                        openMenu && (<div className="relative">
+                                            <div className=" absolute top-0 right-[-50%] w-[150px] border border-slate-200 bg-white rounded-md shadow-md">
+                                                <ul className="py-1 w-full">
+                                                    <button onClick={handleArchiver} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Archiver</li></button>
+                                                    <button onClick={handleDelete} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Supprimer</li></button>
 
-                                </ul>
-                            </div>
-                        </div>
-                    </button>
+                                                </ul>
+                                            </div>
+                                        </div>)
+                                    }
+                                </button>)
+                                : (<button onClick={handleDelete} className="text-xs text-gray-700">
+                                    <FluentDelete32Regular className="w-5 h-5" />
+                                </button>)
+                        }
+                    </div>
                 </div>
             </div>
             <button onClick={handleOpen} className="absolute h-full w-full z-[4] top-0 left-0"></button>
-            <div className="h-full w-full overflow-hidden border relative max-h-[393px] z-[1]">
+            <div className="h-full w-full overflow-hidden relative max-h-[393px] z-[1]">
                 {textContent}
             </div>
         </div>

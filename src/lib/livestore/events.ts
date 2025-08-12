@@ -54,3 +54,29 @@ export const pintingNote = Events.synced({
     pinted: Schema.Boolean,
   }),
 });
+
+export const createGroup = Events.synced({
+  name: "v1.createGroup",
+  schema: Schema.Struct({
+    id: Schema.String,
+    name: Schema.String,
+    created: Schema.DateFromNumber,
+    modified: Schema.DateFromNumber,
+  }),
+});
+
+export const deleteGroup = Events.synced({
+  name: "v1.deleteGroup",
+  schema: Schema.Struct({
+    id: Schema.String,
+  }),
+});
+
+export const modifyGroup = Events.synced({
+  name: "v1.modifyGroup",
+  schema: Schema.Struct({
+    id: Schema.String,
+    name: Schema.String,
+    modified: Schema.DateFromNumber,
+  }),
+});
