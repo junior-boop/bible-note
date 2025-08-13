@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { FluentDelete32Regular, FluentMoreHorizontal32Regular, FluentPin32Filled, FluentPin32Regular } from "../../lib/icons";
-import { events, type Notes } from "../../lib/livestore/schema";
+import { FluentArchiveArrowBack32Regular, FluentDelete32Regular, FluentMoreHorizontal32Regular, FluentPin32Filled, FluentPin32Regular } from "../../lib/icons";
+import { events, type Notes, groupes, tables } from "../../lib/livestore/schema";
 import { useStore } from '@livestore/react'
 import { useNavigate, useLocation } from 'react-router-dom';
+import { queryDb } from '@livestore/livestore'
 
 export default function NoteItems({ data }: { data: Notes }) {
     const [pin, setPin] = useState(false);
@@ -10,6 +11,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     const [openMenu, setOpenMenu] = useState(false)
     const content = JSON.parse(body || "{}") as { content: { type: string, content: { type: string, text: string }[] }[] } || {};
     const [isHome, setIshome] = useState(false)
+
 
 
     const heading = (d: { text: string }) => <div className="font-semibold">{d.text}</div>;
@@ -20,6 +22,8 @@ export default function NoteItems({ data }: { data: Notes }) {
 
     const navigate = useNavigate()
     const location = useLocation();
+
+    const groupe = store.useQuery(queryDb(tables.groupes.where({ id: data.grouped as string })))
 
     const textContent = content.content?.map((item, i) => {
         if (i === 0 && item.type === "heading") {
@@ -90,7 +94,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     }, [])
 
     return (
-        <div className="noteitems p-4 text-[14px] bg-slate-50 mb-4 w-[256px] rounded-xl max-h-[425px]  relative">
+        <div className="noteitems text-[14px] bg-slate-50 mb-4 w-full rounded-xl max-h-[425px]  relative">
 
             <div className="noteovermouse absolute top-0 left-0  w-full z-[5] ">
                 <div className="relative h-full w-full bg-slate-50">
@@ -121,17 +125,28 @@ export default function NoteItems({ data }: { data: Notes }) {
                                         </div>)
                                     }
                                 </button>)
-                                : (<button onClick={handleDelete} className="text-xs text-gray-700">
-                                    <FluentDelete32Regular className="w-5 h-5" />
-                                </button>)
+                                : (<>
+                                    <button onClick={handleDelete} className="text-xs text-gray-700">
+                                        <FluentDelete32Regular className="w-5 h-5" />
+                                    </button>
+                                    <button onClick={handleArchiver} className="text-gray-700">
+                                        <FluentArchiveArrowBack32Regular className="w-5 h-5" />
+                                    </button></>)
                         }
                     </div>
                 </div>
             </div>
             <button onClick={handleOpen} className="absolute h-full w-full z-[4] top-0 left-0"></button>
-            <div className="h-full w-full overflow-hidden relative max-h-[393px] z-[1]">
+            <div className="h-full w-full overflow-hidden relative max-h-[393px] z-[1] p-4">
                 {textContent}
             </div>
+            {
+                groupe.length > 0 && <div className="bg-slate-200 px-4 py-2 rounded-b-xl">
+                    {
+                        groupe[0].name.length > 25 ? `${groupe[0].name.substring(0, 25)}...` : groupe[0].name
+                    }
+                </div>
+            }
         </div>
     )
 }

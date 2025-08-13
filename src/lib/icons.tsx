@@ -172,3 +172,17 @@ export function FluentEdit32Regular(props: SVGProps<SVGSVGElement>) {
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M28.565 3.434a4.89 4.89 0 0 0-6.915 0L4.357 20.73a3.7 3.7 0 0 0-1.002 1.84l-1.333 6.22a1 1 0 0 0 1.188 1.188l6.22-1.333a3.7 3.7 0 0 0 1.84-1.002l17.295-17.295a4.89 4.89 0 0 0 0-6.914m-5.5 1.414a2.89 2.89 0 0 1 4.085 4.086l-.9.9l-4.086-4.085zm-2.316 2.315l4.086 4.086L9.857 26.23a1.7 1.7 0 0 1-.846.46L4.3 27.7l1.01-4.71a1.7 1.7 0 0 1 .46-.846z" /></svg>
     )
 }
+
+
+export function FluentArchiveArrowBack32Regular(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M13 14a1 1 0 1 0 0 2h4.343a9 9 0 0 1 2.55-1.45A1 1 0 0 0 19 14zM9.5 27h5.435c.362.728.82 1.4 1.357 2H9.5A5.5 5.5 0 0 1 4 23.5V10.236C3.386 9.686 3 8.888 3 8V6a3 3 0 0 1 3-3h20a3 3 0 0 1 3 3v2a3 3 0 0 1-1 2.236v5.28a9 9 0 0 0-2-1.004V11H6v12.5A3.5 3.5 0 0 0 9.5 27M6 5a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h20a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1zm17 25.5a7.5 7.5 0 1 0 0-15a7.5 7.5 0 0 0 0 15m-1.22-10.22l-1.22 1.22h2.69a4.25 4.25 0 0 1 4.25 4.25v.5a.75.75 0 0 1-1.5 0v-.5A2.75 2.75 0 0 0 23.25 23h-2.69l1.22 1.22a.75.75 0 1 1-1.06 1.06l-2.5-2.5a.75.75 0 0 1 0-1.06l2.5-2.5a.75.75 0 1 1 1.06 1.06" /></svg>
+    )
+}
+
+
+export function FluentArrowLeft32Filled(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M29 16c0 .69-.56 1.25-1.25 1.25H7.213l7.432 7.628a1.25 1.25 0 1 1-1.79 1.744l-9.497-9.747a1.246 1.246 0 0 1 0-1.75l9.497-9.747a1.25 1.25 0 0 1 1.79 1.744L7.213 14.75H27.75c.69 0 1.25.56 1.25 1.25" /></svg>
+    )
+}

@@ -50,7 +50,6 @@ import {
 } from "../../tiptap-ui/link-popover"
 import { MarkButton } from "../../tiptap-ui/mark-button"
 import { TextAlignButton } from "../../tiptap-ui/text-align-button"
-import { UndoRedoButton } from "../../tiptap-ui/undo-redo-button"
 
 // --- Icons ---
 import { ArrowLeftIcon } from "../../tiptap-icons/arrow-left-icon"
@@ -71,6 +70,9 @@ import { handleImageUpload, MAX_FILE_SIZE } from "../../../lib/tiptap-utils"
 // --- Styles ---
 import "../../tiptap-templates/simple/simple-editor.scss"
 import { BibleButton } from "../../../../src/communs/ui/bible_component/Bibleverset"
+import { FluentArrowLeft32Filled } from "../../../../src/lib/icons"
+
+import { useNavigate } from "react-router-dom"
 
 const MainToolbarContent = ({
   onHighlighterClick,
@@ -92,16 +94,22 @@ const MainToolbarContent = ({
     setOpenVerset(false)
     setInputValue('')
   }
+  const navigate = useNavigate()
+  const handleBack = () => navigate(-1)
   return (
     <>
+      <div className="pl-2"></div>
+      <button onClick={handleBack} className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
+        <FluentArrowLeft32Filled className="h-5 w-5" />
+      </button>
       <Spacer />
 
-      <ToolbarGroup>
-        <UndoRedoButton action="undo" />
-        {/* <UndoRedoButton action="redo" /> */}
-      </ToolbarGroup>
+      {/* <ToolbarGroup> */}
+      {/* <UndoRedoButton action="undo" /> */}
+      {/* <UndoRedoButton action="redo" /> */}
+      {/* </ToolbarGroup> */}
 
-      <ToolbarSeparator />
+      {/* <ToolbarSeparator /> */}
 
       <ToolbarGroup>
         <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
@@ -167,6 +175,12 @@ const MainToolbarContent = ({
       {/* <ToolbarGroup>
         <ThemeToggle />
       </ToolbarGroup> */}
+      <Spacer />
+
+      <button className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
+        {/* <FluentArrowLeft32Filled className="h-5 w-5" /> */}
+      </button>
+      <div className="pr-2"></div>
     </>
   )
 }

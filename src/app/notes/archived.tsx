@@ -47,15 +47,12 @@ export default function ArchivePages() {
                 {
                     notes.length > 0 && (<>
                         <div className="mt-8"></div>
-                        <div>
+                        <div className="px-2">
                             <Noteliste data={notes as Notes[]} />
                         </div>
                     </>)
                 }
 
-                {notes.length === 0 && (<div className="mt-8 h-[100px] w-full flex items-center px-10 border-dashed border rounded-xl">
-                    <div>Cliquez sur le bouton <b>"Ajouter une note"</b> pour commencer a ecrire les notes</div>
-                </div>)}
             </div>
         </div>
     )

@@ -50,7 +50,7 @@ export default function NotesPages() {
                 {
                     notePinned.length > 0 && (<>
                         <div className="mt-8"><Subtitle title="Notes épinglés" /></div>
-                        <div>
+                        <div className="px-2">
                             <Noteliste data={notePinned as Notes[]} />
                         </div>
                     </>)
@@ -59,7 +59,7 @@ export default function NotesPages() {
                 {
                     notes.length > 0 && (<>
                         <div className="mt-8"><Subtitle title="Autres" /></div>
-                        <div>
+                        <div className="px-2">
                             <Noteliste data={notes as Notes[]} />
                         </div>
                     </>)

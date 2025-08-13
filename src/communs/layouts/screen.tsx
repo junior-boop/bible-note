@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet, useLocation, } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useParams, } from 'react-router-dom';
 import { FluentArchive32Filled, FluentArchive32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentNoteAdd28Regular, FluentPerson32Filled, FluentPerson32Regular, FluentSettings32Filled, FluentSettings32Regular } from '../../lib/icons';
 import { useNavigate } from 'react-router-dom';
 import { events, type Notes } from '../../lib/livestore/schema';
@@ -11,6 +11,10 @@ export default function Screen() {
 
     useEffect(() => {
         setOnNote(location.pathname.includes("note"))
+        setOnNote(location.pathname.includes("groupes"))
+        if (location.pathname.includes("groupes") && location.pathname.includes("dossier")) {
+            setOnNote(false)
+        }
     }, [location])
     return (
         <div className="flex w-full h-dvh relative ">
@@ -42,6 +46,15 @@ export default function Screen() {
 function NewNote() {
     const navigate = useNavigate();
     const { store } = useStore();
+    const location = useLocation()
+    const { id } = useParams()
+    const [idgroupe, setIdGroup] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (location.pathname.includes("dossier")) {
+            setIdGroup(id as string)
+        } else { setIdGroup(null) }
+    }, [location])
 
     const handleNewNote = () => {
         const placeholderText = `{"type":"doc","content":[{"type":"heading","attrs":{"textAlign":null,"level":1},"content":[{"type":"text","text":"Entrez votre titre"}]},{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Écrivez votre note et autres ici."}]}]}`
@@ -50,7 +63,7 @@ function NewNote() {
             body: placeholderText,
             pinted: false,
             archived: false,
-            grouped: '',
+            grouped: idgroupe,
             created: new Date(),
             modified: new Date(),
             deleted: null,
