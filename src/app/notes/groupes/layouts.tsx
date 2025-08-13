@@ -59,12 +59,14 @@ export function AsideList() {
     const [groupName, setGroupName] = useState<string | null>("")
     const { store } = useStore()
     const handleNewGroup = () => {
-        store.commit(events.createGroup({
-            id: crypto.randomUUID(),
-            name: groupName as string,
-            created: new Date(),
-            modified: new Date()
-        }))
+        if (groupName?.length > 0) {
+            store.commit(events.createGroup({
+                id: crypto.randomUUID(),
+                name: groupName as string,
+                created: new Date(),
+                modified: new Date()
+            }))
+        }
 
         setGroupName("")
     }

@@ -69,8 +69,10 @@ import { handleImageUpload, MAX_FILE_SIZE } from "../../../lib/tiptap-utils"
 
 // --- Styles ---
 import "../../tiptap-templates/simple/simple-editor.scss"
-import { BibleButton } from "../../../../src/communs/ui/bible_component/Bibleverset"
-import { FluentArrowLeft32Filled } from "../../../../src/lib/icons"
+import { BibleVersetIcon, FluentArrowLeft32Filled, FluentFolderLink32Regular } from "../../../../src/lib/icons"
+
+import BibleVerset from "../../../../src/communs/ui/bible_component/extension"
+
 
 import { useNavigate } from "react-router-dom"
 
@@ -86,16 +88,12 @@ const MainToolbarContent = ({
   isMobile: boolean
 }) => {
 
-  const [openVerset, setOpenVerset] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState<string>("")
-
-  const handleBibleVerset = () => {
-    editor?.commands.setVerset({ entry: inputValue })
-    setOpenVerset(false)
-    setInputValue('')
-  }
   const navigate = useNavigate()
   const handleBack = () => navigate(-1)
+  const addVersetSection = () => {
+    // Logic to add a new verse section
+    editor?.commands.setVerset({ entry: "Matth 12: 4-12" })
+  }
   return (
     <>
       <div className="pl-2"></div>
@@ -159,7 +157,9 @@ const MainToolbarContent = ({
       </ToolbarGroup>
       <ToolbarGroup>
         {/* <ImageUploadButton text="Add" /> */}
-        <BibleButton />
+        <button onClick={addVersetSection} className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
+          <BibleVersetIcon className="h-4 w-4" />
+        </button>
       </ToolbarGroup>
       {/* <ToolbarGroup>
         <div className={`h-[52px] absolute w-full bg-slate-200 flex transition-all duration-300 z-[-1] ${openVerset ? "top-[-52px]" : "top-[0]"}`}>
@@ -178,7 +178,7 @@ const MainToolbarContent = ({
       <Spacer />
 
       <button className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
-        {/* <FluentArrowLeft32Filled className="h-5 w-5" /> */}
+        <FluentFolderLink32Regular className="h-5 w-5" />
       </button>
       <div className="pr-2"></div>
     </>
@@ -293,6 +293,7 @@ export function SimpleEditor({ onChange, content }: { content: string, onChange:
       Superscript,
       Subscript,
       Selection,
+      BibleVerset,
       ImageUploadNode.configure({
         accept: "image/*",
         maxSize: MAX_FILE_SIZE,

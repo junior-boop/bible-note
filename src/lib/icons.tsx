@@ -186,3 +186,26 @@ export function FluentArrowLeft32Filled(props: SVGProps<SVGSVGElement>) {
         <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M29 16c0 .69-.56 1.25-1.25 1.25H7.213l7.432 7.628a1.25 1.25 0 1 1-1.79 1.744l-9.497-9.747a1.246 1.246 0 0 1 0-1.75l9.497-9.747a1.25 1.25 0 0 1 1.79 1.744L7.213 14.75H27.75c.69 0 1.25.56 1.25 1.25" /></svg>
     )
 }
+
+
+export function FluentFolderLink32Regular(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M4 8.5V11h6.464a1.5 1.5 0 0 0 1.061-.44l2.06-2.06l-2.06-2.06a1.5 1.5 0 0 0-1.06-.44H6.5A2.5 2.5 0 0 0 4 8.5m-2 0A4.5 4.5 0 0 1 6.5 4h3.964a3.5 3.5 0 0 1 2.475 1.025L15.414 7.5H25.5A4.5 4.5 0 0 1 30 12v8.528a6 6 0 0 0-2-1.187V12a2.5 2.5 0 0 0-2.5-2.5H15.414l-2.475 2.475A3.5 3.5 0 0 1 10.464 13H4v10.5A2.5 2.5 0 0 0 6.5 26h7.583c.12.718.368 1.393.72 2H6.5A4.5 4.5 0 0 1 2 23.5zm19.5 13a1 1 0 0 0-1-1H20a4.5 4.5 0 1 0 0 9h.5a1 1 0 1 0 0-2H20a2.5 2.5 0 0 1 0-5h.5a1 1 0 0 0 1-1m4-1a1 1 0 1 0 0 2h.5a2.5 2.5 0 0 1 0 5h-.5a1 1 0 1 0 0 2h.5a4.5 4.5 0 1 0 0-9zm-5 3.5a1 1 0 1 0 0 2h5a1 1 0 1 0 0-2z" /></svg>
+    )
+}
+
+export function BibleVersetIcon(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg width="31" height="33" viewBox="0 0 31 33" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+            <path d="M0 29L0.000448175 4.64062C0.000448177 2 2 0 4 0H26.5C29.5154 0 30.9708 2 30.9708 5.5C30.9708 12.2031 31 25.2 31 28.5C31 31.8 28.6015 33 27.4168 33H19.278V29.4219H26C27.4168 29.4219 28 28.875 28 27.5L28 6.5C28 4.64062 27.4168 3.57812 25.5 3.57812H6C4 3.57812 3.55442 4.64062 3.55442 6.5L3.55442 27C3.55442 28.65 4.5 29.4219 6 29.4219H11.6932V33H4.24935C2 33 0 31 0 29Z" fill="currentColor" />
+            <path d="M15.5 10C16.6046 10 17.5 10.8954 17.5 12V16H22C23.1046 16 24 16.8954 24 18C24 19.1046 23.1046 20 22 20H17.5V31C17.5 32.1046 16.6046 33 15.5 33C14.3954 33 13.5 32.1046 13.5 31V20H9C7.89543 20 7 19.1046 7 18C7 16.8954 7.89543 16 9 16H13.5V12C13.5 10.8954 14.3954 10 15.5 10Z" fill="currentColor" />
+        </svg>
+    )
+}
+
+
+export function FluentArrowUp32Filled(props: SVGProps<SVGSVGElement>) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 32 32" {...props}>{/* Icon from Fluent UI System Icons by Microsoft Corporation - https://github.com/microsoft/fluentui-system-icons/blob/main/LICENSE */}<path fill="currentColor" d="M16 29c-.69 0-1.25-.56-1.25-1.25V7.213l-7.628 7.432a1.25 1.25 0 1 1-1.744-1.79l9.747-9.497a1.246 1.246 0 0 1 1.75 0l9.747 9.497a1.25 1.25 0 1 1-1.744 1.79L17.25 7.213V27.75c0 .69-.56 1.25-1.25 1.25" /></svg>
+    )
+}

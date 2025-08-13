@@ -14,7 +14,8 @@ declare module "@tiptap/core" {
        *   .commands
        *   .setVerset({ entry: 'Matth 12: 12-4'})
        */
-      setVerset: (options: { entry: string }) => ReturnType;
+      setVerset: () => ReturnType;
+      addVerset: (options: { entry: string }) => ReturnType;
     };
   }
 }
@@ -29,9 +30,9 @@ export default Node.create({
   addCommands() {
     return {
       setVerset:
-        (option) =>
+        () =>
         ({ commands }: { commands: SingleCommands }) => {
-          return commands.insertContent({ type: this.name, attrs: option });
+          return commands.setNode(this.name);
         },
     };
   },
