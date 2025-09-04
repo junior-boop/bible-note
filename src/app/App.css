@@ -1,0 +1,69 @@
+div,
+p,
+span,
+em {
+    color: #555;
+
+}
+
+.column {
+    columns: 100%;
+    column-span: none;
+    column-count: auto;
+    column-width: 250px;
+    column-fill: balance;
+}
+
+
+.my-masonry-grid {
+    display: -webkit-box;
+    /* Not needed if autoprefixing */
+    display: -ms-flexbox;
+    /* Not needed if autoprefixing */
+    display: flex;
+    margin-left: -30px;
+    /* gutter size offset */
+    width: auto;
+}
+
+.my-masonry-grid_column {
+    padding-left: 20px;
+    /* gutter size */
+    background-clip: padding-box;
+}
+
+.noteitems {
+    .noteovermouse {
+        visibility: hidden;
+    }
+
+    &:hover .noteovermouse {
+        visibility: visible
+    }
+}
+
+button {
+    text-align: left !important;
+}
+
+.dossierItem {
+
+    .itemsMenu {
+        opacity: 0;
+        transition: all ease-in-out 0.3s;
+
+    }
+
+    &:hover .itemsMenu {
+        opacity: 1;
+    }
+}
+
+p:has(img) {
+    margin-bottom: 12px;
+}
+
+p>img {
+    margin-bottom: 12px;
+    border-radius: 7px;
+}
