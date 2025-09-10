@@ -47,10 +47,7 @@ export async function getNoteById(id: string) {
 }
 
 export async function getAllNotes() {
-  const result = await Notes.orderBy("modified", "DESC")
-    .where({ pinned: 0 })
-    .where({ archived: 0 })
-    .findAll();
+  const result = await Notes.orderBy("modified", "DESC").findAll();
   return result;
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { FluentArchiveArrowBack32Regular, FluentDelete32Regular, FluentMoreHorizontal32Regular, FluentPin32Filled, FluentPin32Regular } from "../../lib/icons";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Notes } from "../../lib/database/db";
+import { useDatabase } from "../context/databaseprovide";
 
 
 export default function NoteItems({ data }: { data: Notes }) {
@@ -11,6 +12,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     const content = JSON.parse(body || "{}") as { content: { type: string, content: { type: string, text: string }[] }[] } || {};
     const [isHome, setIshome] = useState(false)
     const [archived, setArchived] = useState(data.archived >= 1 ? true : false)
+    const { toggleNotePinned, toggleNoteArchived, deleteNote } = useDatabase();
 
 
 
@@ -53,7 +55,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     const handlePinToggle = () => {
         setPin(!pin);
         // Here you can add logic to handle pinning the note, e.g., updating the store or state
-        window.api.db.setnotespinned({
+        toggleNotePinned({
             id,
             pinned: !pin,
         });
@@ -76,7 +78,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     const handleArchiver = () => {
         setOpenMenu(false)
         setArchived(!archived)
-        window.api.db.setnotesarchived({
+        toggleNoteArchived({
             id: id as string,
             archived: !archived
         })

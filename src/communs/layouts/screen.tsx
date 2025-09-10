@@ -57,8 +57,6 @@ function NewNote() {
         if (location.pathname.includes("dossier")) {
             setIdGroup(id as string)
         } else { setIdGroup(null) }
-
-        console.log(userinfos)
     }, [location])
 
 

@@ -5,12 +5,15 @@ import Subtitle from "../../communs/ui/subtitle";
 
 import Noteliste from "../../communs/ui/NotesListe";
 import { Notes } from "../../lib/database/db";
+import { useDatabase } from "../../communs/context/databaseprovide";
 
 export default function ArchivePages() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const { notesQuery } = useDatabase();
 
-    const [notes, setNotes] = useState<Notes[] | null>(null)
+
+    const notes = notesQuery?.where(note => note.archived === 1);
 
 
     const handlesearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,18 +25,18 @@ export default function ArchivePages() {
         }
     }
 
-    const handleNotes = useCallback(async () => {
-        setNotes(await window.api.db.getnotesarchived())
-    }, [])
+    // const handleNotes = useCallback(async () => {
+    //     setNotes(await window.api.db.getnotesarchived())
+    // }, [])
 
 
 
-    useEffect(() => {
-        (async () => {
-            console.log(await window.api.db.getnotesarchived())
-        })()
-        handleNotes()
-    }, [handleNotes])
+    // useEffect(() => {
+    //     (async () => {
+    //         console.log(notes)
+    //     })()
+    //     handleNotes()
+    // }, [handleNotes])
 
     return (
         <div className="w-full h-dvh">
