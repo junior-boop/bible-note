@@ -1,11 +1,17 @@
 const { FusesPlugin } = require('@electron-forge/plugin-fuses');
+const { AutoUnpackNativesPlugin} = require('@electron-forge/plugin-auto-unpack-natives')
 const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 
 module.exports = {
   packagerConfig: {
     asar: true,
+    ignore : [
+      /node_modules\/(?!(better-sqlite3|bindings|file-uri-to-path)\/)/,
+    ]
   },
-  rebuildConfig: {},
+  rebuildConfig: {
+    force : true
+  },
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
@@ -25,6 +31,7 @@ module.exports = {
     },
   ],
   plugins: [
+    new AutoUnpackNativesPlugin({}),
     {
       name: '@electron-forge/plugin-vite',
       config: {

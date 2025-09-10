@@ -6,7 +6,7 @@ import ArchivePages from './notes/archived';
 import DossierPage from './notes/groupes';
 import GroupeLayouts from './notes/groupes/layouts';
 import EditorPage from './notes/notepage';
-import { BrowserRouter, data, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, data, HashRouter, Route, Routes, useLocation } from 'react-router-dom'
 import MainLogin from './login';
 import GlobalProvider, { useGlobalContext } from '../communs/context/global';
 
@@ -14,36 +14,19 @@ import GlobalProvider, { useGlobalContext } from '../communs/context/global';
 
 
 const Router = () => {
-  const [userState, setUserState] = useState(0)
-  const [isLoding, setIsLoding] = useState(false)
   const { USER } = useGlobalContext()
   const [infos, setter] = USER
+  const location = useLocation()
+
+  const usersession = JSON.parse(window.api.db.getsessionid())
 
 
-  const handleSession = useCallback(async () => {
-    try {
-      const userSession = await window.api.db.getsession()
-      const test = await window.api.testdb()
+  useEffect(() => {
+    console.log(location.pathname)
+    console.log(usersession)
+  }, [location.pathname])
 
-      console.log("test db", test)
-
-      if (userSession.length > 0) {
-        setter({
-          id: userSession[0]?.iduser,
-          name: userSession[0]?.name,
-          email: userSession[0]?.email
-        })
-      }
-      setUserState(userSession.length > 0 ? 1 : 0)
-    } catch (e) {
-      console.log(e)
-    }
-  }, [])
-
-  handleSession()
-
-
-  if (userState === 1 && !isLoding) {
+  if (usersession || infos.id !== null) {
     return (
       <Routes>
         <Route element={<Screen />}>
@@ -72,11 +55,11 @@ const Router = () => {
 function App() {
 
   return (
-    <BrowserRouter>
+    <HashRouter basename='/'>
       <GlobalProvider>
         <Router />
       </GlobalProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 
 }

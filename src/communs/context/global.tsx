@@ -6,7 +6,8 @@ export const GlobalProvider = ({ children }: { children: React.ReactNode }) => {
     const initialState = {
         name: null,
         email: null,
-        id: null
+        id: null,
+        isuser: null
     };
     const [userState, setUserState] = useState(initialState),
         USER = [userState, setUserState];

@@ -6,8 +6,7 @@ export default function MainLogin() {
     const { USER } = useGlobalContext()
     const [infos, setter] = USER
     const sender = useCallback(async (data: UserInput) => {
-        console.log(data)
-        const response = await window.api.setExternalData({
+        const response = await window.api.external.setExternalData({
             name: data.name,
             email: data.email,
             lastlogin: data.lastlogin,
@@ -17,12 +16,12 @@ export default function MainLogin() {
         const setusersession = await window.api.db.setsession({
             ...response as User
         });
-        setter({
-            id: "je dans la joie",
-            ...data
-        })
-
-        console.log(setusersession)
+        window.api.db.addsessionid(JSON.stringify({
+            id: setusersession?.iduser,
+            name: setusersession?.name,
+            email: setusersession?.email,
+        }))
+        setter(setusersession)
     }, [setter]);
 
 

@@ -79,18 +79,20 @@ import { useLocation, useNavigate } from "react-router-dom"
 
 const MainToolbarContent = ({
   onHighlighterClick,
+  onBack,
   // onLinkClick,
   isMobile,
   editor
 }: {
   editor?: Editor,
+  onBack: () => void,
   onHighlighterClick: () => void
   onLinkClick: () => void
   isMobile: boolean
 }) => {
 
   const navigate = useNavigate()
-  const handleBack = () => navigate(-1)
+  const handleBack = () => { onBack(); navigate(-1) }
   const addVersetSection = () => {
     // Logic to add a new verse section
     const Box = document.createElement("div");
@@ -250,7 +252,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ onChange, content }: { content: string, onChange: (data: string) => void }) {
+export function SimpleEditor({ onChange, content, onBack }: { content: string, onChange: (data: string) => void, onBack: () => void }) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -334,6 +336,7 @@ export function SimpleEditor({ onChange, content }: { content: string, onChange:
         >
           {mobileView === "main" ? (
             <MainToolbarContent
+              onBack={onBack}
               onHighlighterClick={() => setMobileView("highlighter")}
               onLinkClick={() => setMobileView("link")}
               isMobile={isMobile}
@@ -353,7 +356,7 @@ export function SimpleEditor({ onChange, content }: { content: string, onChange:
           className="simple-editor-content"
         />
 
-        <MenuFlottant editor={editor as Editor} />
+        <MenuFlottant editor={editor as Editor} isMobile={isMobile} />
         <StartingMenu editor={editor as Editor} isMobile={isMobile} />
         <div className="h-[100px]"></div>
       </EditorContext.Provider>

@@ -13,7 +13,6 @@ export default function EditorPage() {
 
 
 
-
     useEffect(() => {
         const contentBody = location.state.note.body
         if (contentBody) {
@@ -26,7 +25,10 @@ export default function EditorPage() {
 
         const t1 = setTimeout(() => {
             console.log("active")
-
+            window.api.db.modifynoteid({
+                id: id,
+                body: content,
+            })
             setSavingState("Enregistré!")
             setIsTyping(false)
         }, 3000)
@@ -45,14 +47,26 @@ export default function EditorPage() {
 
     }, [content])
 
+    const handlegoback = () => {
+        console.log("active")
+        window.api.db.modifynoteid({
+            id: id,
+            body: content,
+        })
+    }
+
     return (
         <div className="flex-1 overflow-hidden w-full h-full">
             {
                 content.length > 0 && (
-                    <SimpleEditor content={content} onChange={(data) => {
-                        setIsTyping(true)
-                        setContent(data)
-                    }} />
+                    <SimpleEditor
+                        content={content}
+                        onChange={(data) => {
+                            setIsTyping(true)
+                            setContent(data)
+                        }}
+                        onBack={handlegoback}
+                    />
                 )
             }
         </div>

@@ -7,8 +7,8 @@ export type Notes = {
   id?: string;
   body: string;
   creator: string;
-  pinned: boolean;
-  archived: boolean;
+  pinned: 0 | 1;
+  archived: 0 | 1;
   grouped: string | null;
   created: Date;
   modified: Date;
@@ -100,19 +100,43 @@ declare global {
         vers1,
         vers2,
       }: filterProps) => filterResultProps | undefined;
-      testdb: () => Promise<string>;
       external: {
         setExternalData: (data: UserInput) => Promise<User | undefined>;
         getExternalData: () => Promise<User | undefined>;
       };
       db: {
+        addsessionid: (data: string) => void;
+        getsessionid: () => string;
         checkdatabase: () => Promise<{ result: number }>;
-        getnotes: () => string;
-        getnotesid: (id: string) => string;
+        getnotes: () => Promise<Notes[]>;
+        getnotesid: (id: string) => Promise<Notes>;
+        modifynoteid: ({
+          id,
+          body,
+        }: {
+          id: string;
+          body: string;
+        }) => Promise<Notes>;
+        getnotesarchived: () => Promise<Notes[]>;
+        setnotesarchived: ({
+          id,
+          archived,
+        }: {
+          id: string;
+          archived: 0 | 1;
+        }) => Promise<Notes[]>;
+        getnotespinned: () => Promise<Notes[]>;
+        setnotespinned: (data) => Notes[];
         setnote: (data: Notes) => Promise<Notes>;
+        deletenote: (id: string) => Promise<boolean>;
         getuserinfos: () => Promise<string>;
         getsession: () => Promise<usersession[] | []>;
-        setsession: (data: User) => Promise<string>;
+        setsession: (data: User) => Promise<{
+          id: string;
+          iduser: string;
+          name: string;
+          email: string;
+        }>;
         deletesession: () => Promise<string>;
       };
     };

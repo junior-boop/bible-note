@@ -1,8 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { createGroupTable, createNotesTable, createSessionTable, createUserTable } from './lib/database';
-import { checkDatabase, setNote, deletedSession, getSession, getUser, setSession, setUser, createdGroupe, Groupe } from './lib/database/operation';
+import { checkDatabase, createGroupTable, createNotesTable, createSessionTable, createUserTable, deleteNote, deleteSession, getAllNotes, getNoteById, getNotesArchived, getNotesPinned, getSession, setNote, setNotePinned, setNotesArchived, setSession, setUser, updateNote } from './lib/database';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -15,7 +14,6 @@ const createWindow = () => {
   createUserTable()
   createGroupTable()
   createSessionTable()
-  createdGroupe()
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -92,41 +90,40 @@ app.on('window-all-closed', () => {
 // code. You can also put them in separate files and import them here.
 
 
-ipcMain.handle('get-notes', (event, arg) => {
-  console.log('Received get-notes request with arg:', arg);
-  // Simulate fetching notes from a database
-  
-  return JSON.stringify(notes); // Send the notes back to the renderer process
+ipcMain.handle('get-notes', async (event) => { 
+  return await getAllNotes()
 });
 
-ipcMain.handle('get-note-id', (event, id)=> {
-  console.log(id)
-  return { id: 1, content: 'Note 1' }
+ipcMain.handle('get-notes-pinned', (event) => {
+  return getNotesPinned()
+});
+
+ipcMain.handle('set-notes-pinned', (event, data) => {
+  return setNotePinned(data)
+});
+
+ipcMain.handle('get-notes-archived', (event) => {
+  return getNotesArchived()
+});
+
+ipcMain.handle('set-notes-archived', (event, data) => {
+  return setNotesArchived(data) 
+});
+
+ipcMain.handle('get-note-id', async (event, id)=> {
+  return await getNoteById(id)
 })
 
-ipcMain.handle("set-note", (event, data) => {
-  console.log(data)
-  return new Promise((res, rej) => {
-    setNote(data, (note) => {
-      if (note) {
-        res(note)
-      } else {
-        rej(new Error('Failed to create note'))
-      }
-    })
-  })
+ipcMain.handle("set-note", async (event, data) => {
+  return setNote(data)
 })
 
-ipcMain.handle("update-note", (event, data) => {
-  return new Promise((res, rej) => {
-    updateNote(data, (note) => {
-      if (note) {
-        res(note)
-      } else {
-        rej(new Error('Failed to update note'))
-      }
-    })
-  })
+ipcMain.handle("modify-note-id", (event, data) => {
+  return updateNote(data.data)
+})
+
+ipcMain.handle("delete-note", (event, id) => {
+  return deleteNote(id)
 })
 
 ipcMain.handle('set-external-data', async (event, data) => {
@@ -138,16 +135,9 @@ ipcMain.handle('set-external-data', async (event, data) => {
     body: JSON.stringify(data),
   });
   const result = await response.json();
-
-  return new Promise((res, rej) => {
-    if (result.data) {
-      setUser(result.data, (user) => {
-        res(user);
-      });
-    } else {
-      rej(new Error('Failed to fetch user data'));
-    }
-  });
+  console.log(result)
+  setSession(result.data)
+  return await setUser(result.data)
 });
 
 ipcMain.handle("get-user-infos",  (id) => {
@@ -174,66 +164,20 @@ ipcMain.handle("get-external-data", async (event) => {
 });
 
 //  session handle
-ipcMain.handle('get-session', (event) => {
-  return new Promise((res, rej) => {
-    getSession((data) => {
-      if (data) {
-        res(data);
-      } else {
-        rej(new Error('Failed to fetch session data'));
-      }
-    });
-  });
+ipcMain.handle('get-session', async(event) => {
+  return await getSession()
 });
 
 ipcMain.handle('set-session', (event, user) => {
-  return new Promise((res, rej) => {
-    setSession(user, (data) => {
-      if (data) {
-        res(data);
-      } else {
-        rej(new Error('Failed to set session data'));
-      }
-    });
-  });
+  return setSession(user)
 });
 
-ipcMain.handle('delete-session', (event) => {
-  return new Promise((res, rej) => {
-    deletedSession(() => {
-      if (data) {
-        res(data);
-      } else {
-        rej(new Error('Failed to delete session data'));
-      }
-    });
-  });
+ipcMain.handle('delete-session', async(event) => {
+  return await deleteSession()
 });
-
 
 ipcMain.handle('check-database', () => {
-  return new Promise((res, rej) => {
-    checkDatabase((data) => {
-      if (data) {
-        res(data);
-      } else {
-        rej(new Error('Failed to check database'));
-      }
-    });
-  });
-});
-
-
-const teste = async () => {
-  const groupes = await Groupe.findAll();
-  return {
-    groupes
-  };
-}
-
-ipcMain.handle('teste-db', async () => {
-  const result = await teste();
-  return result;
+  return checkDatabase();
 });
 
 // 'https://nuvelserver.godigital.workers.dev/users/signin'

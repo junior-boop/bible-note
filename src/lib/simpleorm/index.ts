@@ -1,7 +1,7 @@
-import { Database } from "sqlite3";
+import Database from "better-sqlite3";
 
 export interface QueryResult {
-  lastID?: number;
+  lastInsertRowid?: number;
   changes: number;
 }
 
@@ -68,32 +68,43 @@ export interface QueryBuilder<T extends DatabaseRow> {
   limit(limit: number): QueryBuilder<T>;
   offset(offset: number): QueryBuilder<T>;
   include(options: IncludeOptions | IncludeOptions[]): QueryBuilder<T>;
-  findAll(): Promise<T[]>;
-  findOne(): Promise<T | null>;
-  count(): Promise<number>;
+  findAll(): T[];
+  findOne(): T | null;
+  count(): number;
 }
 
 // Interface pour les instances de modèle
 export interface ModelInstance<T extends DatabaseRow> extends Partial<T> {
-  save(): Promise<T>;
-  delete(): Promise<boolean>;
+  save(): T;
+  delete(): boolean;
 }
 
 // Interface pour les classes de modèle avec métadonnées
 export interface ModelClass<T extends DatabaseRow> extends ModelWithMeta<T> {
   new (data?: Partial<T>): ModelInstance<T>;
-  createTable(): Promise<QueryResult>;
-  create(data: Partial<T>): Promise<T>;
-  findAll(options?: QueryOptions): Promise<T[]>;
+  createTable(): QueryResult;
+  create(data: Partial<T>): T;
+  findAll(options?: QueryOptions): T[];
   findById(
     id: string | number,
     options?: { include?: IncludeOptions | IncludeOptions[] }
-  ): Promise<T | null>;
-  findOne(options: QueryOptions): Promise<T | null>;
-  update(id: string | number, data: Partial<T>): Promise<T | null>;
-  delete(id: string | number): Promise<boolean>;
-  deleteWhere(conditions: WhereConditions): Promise<number>;
-  upsert(data: Partial<T>): Promise<T>;
+  ): T | null;
+  findOne(options: QueryOptions): T | null;
+  update(id: string | number, data: Partial<T>): T | null;
+  delete(id: string | number): boolean;
+  deleteWhere(conditions: WhereConditions): number;
+  upsert(data: Partial<T>): T;
+  upsertWithCoalesce(data: Partial<T>): T;
+  // Nouvelles méthodes ajoutées
+  exists(conditions: WhereConditions): boolean;
+  createMany(dataArray: Partial<T>[]): T[];
+  updateWhere(conditions: WhereConditions, data: Partial<T>): number;
+  increment(id: string | number, column: string, value?: number): T | null;
+  decrement(id: string | number, column: string, value?: number): T | null;
+  findOrCreate(
+    conditions: WhereConditions,
+    defaults?: Partial<T>
+  ): { record: T; created: boolean };
   // Query Builder methods
   where(conditions: WhereConditions): QueryBuilder<T>;
   orderBy(column: string, direction?: "ASC" | "DESC"): QueryBuilder<T>;
@@ -103,42 +114,196 @@ export interface ModelClass<T extends DatabaseRow> extends ModelWithMeta<T> {
   orm: SimpleORM;
 }
 
-// SimpleORM.ts
+// SimpleORM.ts adaptée pour better-sqlite3
 class SimpleORM {
-  private db: Database;
+  private db: Database.Database;
+  private prepared: Map<string, Database.Statement> = new Map();
 
-  constructor(dbPath: string) {
-    this.db = new Database(dbPath);
+  constructor(dbPath: string, options?: Database.Options) {
+    this.db = new Database(dbPath, options);
   }
 
-  // Méthode pour exécuter des requêtes SQL brutes
-  query<T = DatabaseRow>(sql: string, params: any[] = []): Promise<T[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err: Error | null, rows: T[]) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      });
+  // Méthode pour obtenir ou créer un statement préparé
+  private getStatement(sql: string): any {
+    if (!this.prepared.has(sql)) {
+      this.prepared.set(sql, this.db.prepare(sql));
+    }
+    return this.prepared.get(sql)!;
+  }
+
+  private sanitizeParams(params: any[]): any[] {
+    return params.map((param) => {
+      // Gérer les valeurs null/undefined
+      if (param === null || param === undefined) {
+        return null;
+      }
+
+      // Gérer les objets Date
+      if (param instanceof Date) {
+        return param.toISOString();
+      }
+
+      // Gérer les booléens (SQLite utilise 0/1)
+      if (typeof param === "boolean") {
+        return param ? 1 : 0;
+      }
+
+      // Gérer les objets (les convertir en JSON)
+      if (typeof param === "object" && param !== null) {
+        return JSON.stringify(param);
+      }
+
+      // Retourner les autres types tels quels
+      return param;
     });
+  }
+
+  query<T = DatabaseRow>(sql: string, params: any[] = []): T[] {
+    try {
+      const sanitizedParams = this.sanitizeParams(params);
+      const stmt = this.getStatement(sql);
+
+      // Pour better-sqlite3, utiliser all() pour plusieurs résultats
+      if (stmt.all) {
+        return stmt.all(sanitizedParams) as T[];
+      }
+
+      // Fallback pour d'autres implémentations
+      const result = stmt.getAsObject ? stmt.getAsObject(sanitizedParams) : [];
+      return Array.isArray(result) ? result : [result].filter(Boolean);
+    } catch (error) {
+      console.error("Query error:", error, "SQL:", sql, "Params:", params);
+      throw error;
+    }
+  }
+
+  // Méthode pour exécuter une seule ligne
+  get<T = DatabaseRow>(sql: string, params: any[] = []): T | null {
+    try {
+      const sanitizedParams = this.sanitizeParams(params);
+      const stmt = this.getStatement(sql);
+
+      // Pour better-sqlite3, utiliser get() pour un seul résultat
+      if (stmt.get) {
+        return (stmt.get(sanitizedParams) as T) || null;
+      }
+
+      // Fallback pour d'autres implémentations
+      stmt.bind(sanitizedParams);
+      if (stmt.step()) {
+        const result = stmt.getAsObject();
+        stmt.reset();
+        return result as T;
+      }
+      stmt.reset();
+      return null;
+    } catch (error) {
+      console.error("Get error:", error, "SQL:", sql, "Params:", params);
+      throw error;
+    }
   }
 
   // Méthode pour exécuter des requêtes qui ne retournent pas de données
-  run(sql: string, params: any[] = []): Promise<QueryResult> {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function (this: any, err: Error | null) {
-        if (err) reject(err);
-        else resolve({ lastID: this.lastID, changes: this.changes });
-      });
-    });
+  run(sql: string, params: any[] = []): QueryResult {
+    try {
+      const sanitizedParams = this.sanitizeParams(params);
+      const stmt = this.getStatement(sql);
+
+      // Pour better-sqlite3
+      if (stmt.run) {
+        const result = stmt.run(sanitizedParams);
+        return {
+          lastInsertRowid: result.lastInsertRowid,
+          changes: result.changes,
+        };
+      }
+
+      // Fallback pour sql.js ou autres implémentations
+      stmt.run(sanitizedParams);
+
+      // Simuler lastInsertRowid pour sql.js
+      const lastIdResult = this.db.exec("SELECT last_insert_rowid() as id");
+      const lastInsertRowid = lastIdResult[0]?.values[0]?.[0] || 0;
+
+      // Simuler changes pour sql.js
+      const changesResult = this.db.exec("SELECT changes() as changes");
+      const changes = changesResult[0]?.values[0]?.[0] || 0;
+
+      return {
+        lastInsertRowid: lastInsertRowid as number,
+        changes: changes as number,
+      };
+    } catch (error) {
+      console.error("Run error:", error, "SQL:", sql, "Params:", params);
+      throw error;
+    }
+  }
+
+  // Ajoutez aussi une méthode pour sauvegarder (qui semble manquer)
+  private saveDatabase(): void {
+    // Cette méthode semble être appelée mais n'est pas définie
+    // Pour better-sqlite3, la sauvegarde est automatique
+    // Pour sql.js, vous devriez implémenter la logique de sauvegarde
+    if (typeof (this.db as any).export === "function") {
+      // Logic pour sql.js
+      try {
+        const data = (this.db as any).export();
+        // Sauvegarder les données selon vos besoins (localStorage, fichier, etc.)
+        console.log("Database saved");
+      } catch (error) {
+        console.warn("Could not save database:", error);
+      }
+    }
+    // Pour better-sqlite3, rien à faire, la sauvegarde est automatique
+  }
+
+  // Méthode pour les transactions (simplifiée pour sql.js)
+  transaction<T>(fn: () => T): T {
+    try {
+      this.db.exec("BEGIN TRANSACTION");
+      const result = fn();
+      this.db.exec("COMMIT");
+      return result;
+    } catch (error) {
+      this.db.exec("ROLLBACK");
+      throw error;
+    }
+  }
+
+  // Exécuter plusieurs statements SQL (DDL)
+  exec(sql: string): void {
+    try {
+      this.db.exec(sql);
+      this.saveDatabase(); // Sauvegarder après exec
+    } catch (error) {
+      console.error("Exec error:", error);
+      throw error;
+    }
   }
 
   // Fermer la connexion
-  close(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.db.close((err: Error | null) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+  close(): void {
+    this.saveDatabase(); // Sauvegarder avant fermeture
+    this.prepared.clear();
+    this.db.close();
+  }
+
+  // Méthodes compatibles avec better-sqlite3 (stubs)
+  pragma(name: string, value?: string | number): any {
+    console.warn("pragma() not fully supported with sql.js");
+    return null;
+  }
+
+  backup(destination: string): void {
+    console.warn("backup() not supported with sql.js in browser environment");
+  }
+
+  get isOpen(): boolean {
+    return this.db !== null;
+  }
+
+  get name(): string {
+    return "sql.js-database";
   }
 }
 
@@ -154,11 +319,11 @@ export abstract class Model {
   }
 
   // Créer la table
-  static async createTable(
+  static createTable(
     tableName: string,
     columns: TableSchema,
     orm: SimpleORM
-  ): Promise<QueryResult> {
+  ): QueryResult {
     const columnDefs = Object.entries(columns)
       .map(([name, type]) => `${name} ${type}`)
       .join(", ");
@@ -168,11 +333,11 @@ export abstract class Model {
   }
 
   // Insérer un nouvel enregistrement
-  static async create<T extends DatabaseRow>(
+  static create<T extends DatabaseRow>(
     tableName: string,
     data: Partial<T>,
     orm: SimpleORM
-  ): Promise<T> {
+  ): T {
     const columns = Object.keys(data).join(", ");
     const placeholders = Object.keys(data)
       .map(() => "?")
@@ -180,17 +345,38 @@ export abstract class Model {
     const values = Object.values(data);
 
     const sql = `INSERT INTO ${tableName} (${columns}) VALUES (${placeholders})`;
-    const result = await orm.run(sql, values);
+    const result = orm.run(sql, values);
 
-    return { id: result.lastID, ...data } as T;
+    return { id: result.lastInsertRowid, ...data } as T;
+  }
+
+  // Insérer plusieurs enregistrements (batch insert)
+  static createMany<T extends DatabaseRow>(
+    tableName: string,
+    dataArray: Partial<T>[],
+    orm: SimpleORM
+  ): T[] {
+    if (dataArray.length === 0) return [];
+
+    const results: T[] = [];
+
+    // Utiliser une transaction pour l'efficacité
+    orm.transaction(() => {
+      for (const data of dataArray) {
+        const result = this.create<T>(tableName, data, orm);
+        results.push(result);
+      }
+    });
+
+    return results;
   }
 
   // Trouver tous les enregistrements avec options avancées
-  static async findAll<T extends DatabaseRow>(
+  static findAll<T extends DatabaseRow>(
     tableName: string,
     orm: SimpleORM,
     options: QueryOptions = {}
-  ): Promise<T[]> {
+  ): T[] {
     const { where = {}, orderBy, limit, offset, include } = options;
 
     let sql = `SELECT * FROM ${tableName}`;
@@ -224,37 +410,31 @@ export abstract class Model {
       sql += ` OFFSET ${offset}`;
     }
 
-    let results = await orm.query<T>(sql, params);
+    let results = orm.query<T>(sql, params);
 
     // Handle includes (relations)
     if (include && results.length > 0) {
-      results = await this.handleIncludes<T>(tableName, results, include, orm);
+      results = this.handleIncludes<T>(tableName, results, include, orm);
     }
 
     return results;
   }
 
   // Trouver un enregistrement par ID avec options
-  static async findById<T extends DatabaseRow>(
+  static findById<T extends DatabaseRow>(
     tableName: string,
     id: string | number,
     orm: SimpleORM,
     options: { include?: IncludeOptions | IncludeOptions[] } = {}
-  ): Promise<T | null> {
+  ): T | null {
     const { include } = options;
 
     const sql = `SELECT * FROM ${tableName} WHERE id = ?`;
-    const rows = await orm.query<T>(sql, [id]);
-    let result = rows[0] || null;
+    let result = orm.get<T>(sql, [id]);
 
     // Handle includes
     if (result && include) {
-      const results = await this.handleIncludes<T>(
-        tableName,
-        [result],
-        include,
-        orm
-      );
+      const results = this.handleIncludes<T>(tableName, [result], include, orm);
       result = results[0];
     }
 
@@ -262,11 +442,11 @@ export abstract class Model {
   }
 
   // Trouver un seul enregistrement avec options
-  static async findOne<T extends DatabaseRow>(
+  static findOne<T extends DatabaseRow>(
     tableName: string,
     options: QueryOptions,
     orm: SimpleORM
-  ): Promise<T | null> {
+  ): T | null {
     const { where = {}, orderBy, include } = options;
 
     const whereClause = Object.keys(where)
@@ -286,73 +466,151 @@ export abstract class Model {
 
     sql += " LIMIT 1";
 
-    const rows = await orm.query<T>(sql, params);
-    let result = rows[0] || null;
+    let result = orm.get<T>(sql, params);
 
     // Handle includes
     if (result && include) {
-      const results = await this.handleIncludes<T>(
-        tableName,
-        [result],
-        include,
-        orm
-      );
+      const results = this.handleIncludes<T>(tableName, [result], include, orm);
       result = results[0];
     }
 
     return result;
   }
 
+  // Vérifier si un enregistrement existe
+  static exists(
+    tableName: string,
+    conditions: WhereConditions,
+    orm: SimpleORM
+  ): boolean {
+    const whereClause = Object.keys(conditions)
+      .map((key) => `${key} = ?`)
+      .join(" AND ");
+    const sql = `SELECT 1 FROM ${tableName} WHERE ${whereClause} LIMIT 1`;
+    const params = Object.values(conditions);
+
+    const result = orm.get(sql, params);
+    return result !== null;
+  }
+
   // Mettre à jour un enregistrement
-  static async update<T extends DatabaseRow>(
+  static update<T extends DatabaseRow>(
     tableName: string,
     id: string | number,
     data: Partial<T>,
     orm: SimpleORM
-  ): Promise<T | null> {
+  ): T | null {
     const setClause = Object.keys(data)
       .map((key) => `${key} = ?`)
       .join(", ");
     const sql = `UPDATE ${tableName} SET ${setClause} WHERE id = ?`;
     const params = [...Object.values(data), id];
 
-    await orm.run(sql, params);
-    return await this.findById<T>(tableName, id, orm);
+    orm.run(sql, params);
+    return this.findById<T>(tableName, id, orm);
+  }
+
+  // Mettre à jour avec conditions
+  static updateWhere<T extends DatabaseRow>(
+    tableName: string,
+    conditions: WhereConditions,
+    data: Partial<T>,
+    orm: SimpleORM
+  ): number {
+    const setClause = Object.keys(data)
+      .map((key) => `${key} = ?`)
+      .join(", ");
+    const whereClause = Object.keys(conditions)
+      .map((key) => `${key} = ?`)
+      .join(" AND ");
+
+    const sql = `UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`;
+    const params = [...Object.values(data), ...Object.values(conditions)];
+
+    const result = orm.run(sql, params);
+    return result.changes;
+  }
+
+  // Incrémenter une colonne numérique
+  static increment<T extends DatabaseRow>(
+    tableName: string,
+    id: string | number,
+    column: string,
+    value: number = 1,
+    orm: SimpleORM
+  ): T | null {
+    const sql = `UPDATE ${tableName} SET ${column} = ${column} + ? WHERE id = ?`;
+    orm.run(sql, [value, id]);
+    return this.findById<T>(tableName, id, orm);
+  }
+
+  // Décrémenter une colonne numérique
+  static decrement<T extends DatabaseRow>(
+    tableName: string,
+    id: string | number,
+    column: string,
+    value: number = 1,
+    orm: SimpleORM
+  ): T | null {
+    const sql = `UPDATE ${tableName} SET ${column} = ${column} - ? WHERE id = ?`;
+    orm.run(sql, [value, id]);
+    return this.findById<T>(tableName, id, orm);
+  }
+
+  // Trouver ou créer un enregistrement
+  static findOrCreate<T extends DatabaseRow>(
+    tableName: string,
+    conditions: WhereConditions,
+    defaults: Partial<T> = {},
+    orm: SimpleORM
+  ): { record: T; created: boolean } {
+    const existing = this.findOne<T>(tableName, { where: conditions }, orm);
+
+    if (existing) {
+      return { record: existing, created: false };
+    }
+
+    const newRecord = this.create<T>(
+      tableName,
+      { ...conditions, ...defaults },
+      orm
+    );
+    return { record: newRecord, created: true };
   }
 
   // Supprimer un enregistrement
-  static async delete(
+  static delete(
     tableName: string,
     id: string | number,
     orm: SimpleORM
-  ): Promise<boolean> {
+  ): boolean {
     const sql = `DELETE FROM ${tableName} WHERE id = ?`;
-    const result = await orm.run(sql, [id]);
+    const result = orm.run(sql, [id]);
     return result.changes > 0;
   }
 
   // Supprimer avec conditions
-  static async deleteWhere(
+  static deleteWhere(
     tableName: string,
     conditions: WhereConditions,
     orm: SimpleORM
-  ): Promise<number> {
+  ): number {
     const whereClause = Object.keys(conditions)
       .map((key) => `${key} = ?`)
       .join(" AND ");
     const sql = `DELETE FROM ${tableName} WHERE ${whereClause}`;
     const params = Object.values(conditions);
 
-    const result = await orm.run(sql, params);
+    const result = orm.run(sql, params);
     return result.changes;
   }
 
   // INSERT OR REPLACE (Upsert)
-  static async upsert<T extends DatabaseRow>(
+  static upsert<T extends DatabaseRow>(
     tableName: string,
     data: Partial<T>,
     orm: SimpleORM
-  ): Promise<T> {
+  ): T {
     const columns = Object.keys(data).join(", ");
     const placeholders = Object.keys(data)
       .map(() => "?")
@@ -360,18 +618,71 @@ export abstract class Model {
     const values = Object.values(data);
 
     const sql = `INSERT OR REPLACE INTO ${tableName} (${columns}) VALUES (${placeholders})`;
-    const result = await orm.run(sql, values);
+    const result = orm.run(sql, values);
 
-    return { id: result.lastID || (data as any).id, ...data } as T;
+    return { id: result.lastInsertRowid || (data as any).id, ...data } as T;
   }
 
-  // Méthode pour gérer les relations (includes)
-  static async handleIncludes<T extends DatabaseRow>(
+  static upsertWithCoalesce<T extends DatabaseRow>(
+    tableName: string,
+    data: Partial<T>,
+    orm: SimpleORM
+  ): T {
+    const columns = Object.keys(data);
+    const values = Object.values(data);
+
+    if ((data as any).id !== undefined) {
+      const targetId = (data as any).id;
+      const nonIdColumns = columns.filter((col) => col !== "id");
+      const nonIdValues = nonIdColumns.map((col) => (data as any)[col]);
+
+      // Utiliser COALESCE pour préserver l'ID existant ou utiliser le nouveau
+      const coalescePlaceholders = nonIdColumns.map(() => "?").join(", ");
+      const allColumns = `id, ${nonIdColumns.join(", ")}`;
+      const allPlaceholders = `COALESCE((SELECT id FROM ${tableName} WHERE id = ?), ?), ${coalescePlaceholders}`;
+
+      const sql = `INSERT OR REPLACE INTO ${tableName} (${allColumns}) VALUES (${allPlaceholders})`;
+      const params = [targetId, targetId, ...nonIdValues];
+
+      const result = orm.run(sql, params);
+      return { id: targetId, ...data } as T;
+    }
+
+    // Insertion normale
+    const placeholders = columns.map(() => "?").join(", ");
+    const sql = `INSERT OR REPLACE INTO ${tableName} (${columns.join(", ")}) VALUES (${placeholders})`;
+    const result = orm.run(sql, values);
+    return { id: result.lastInsertRowid, ...data } as T;
+  }
+
+  // Compter les enregistrements
+  static count(
+    tableName: string,
+    conditions: WhereConditions = {},
+    orm: SimpleORM
+  ): number {
+    let sql = `SELECT COUNT(*) as count FROM ${tableName}`;
+    let params: any[] = [];
+
+    if (Object.keys(conditions).length > 0) {
+      const whereClause = Object.keys(conditions)
+        .map((key) => `${key} = ?`)
+        .join(" AND ");
+      sql += ` WHERE ${whereClause}`;
+      params = Object.values(conditions);
+    }
+
+    const result = orm.get<{ count: number }>(sql, params);
+    return result?.count || 0;
+  }
+
+  // Méthode pour gérer les relations (includes) - Synchrone maintenant
+  static handleIncludes<T extends DatabaseRow>(
     tableName: string,
     results: T[],
     include: IncludeOptions | IncludeOptions[],
     orm: SimpleORM
-  ): Promise<T[]> {
+  ): T[] {
     const includeArray = Array.isArray(include) ? include : [include];
 
     for (const includeOption of includeArray) {
@@ -395,7 +706,7 @@ export abstract class Model {
       // Requête pour récupérer les données liées
       const placeholders = ids.map(() => "?").join(", ");
       const relatedSql = `SELECT * FROM ${includeTable} WHERE ${foreignKey} IN (${placeholders})`;
-      const relatedData = await orm.query(relatedSql, ids);
+      const relatedData = orm.query(relatedSql, ids);
 
       // Grouper les données liées par foreign key
       const relatedMap = new Map();
@@ -487,7 +798,7 @@ class ModelFactory {
 
     const metadata = generateMetadata();
 
-    // Query Builder Implementation
+    // Query Builder Implementation - Maintenant synchrone
     class QueryBuilderImpl implements QueryBuilder<T> {
       private options: QueryOptions = {};
 
@@ -539,29 +850,17 @@ class ModelFactory {
         return this;
       }
 
-      async findAll(): Promise<T[]> {
-        return await Model.findAll<T>(this.tableName, this.orm, this.options);
+      findAll(): T[] {
+        return Model.findAll<T>(this.tableName, this.orm, this.options);
       }
 
-      async findOne(): Promise<T | null> {
-        return await Model.findOne<T>(this.tableName, this.options, this.orm);
+      findOne(): T | null {
+        return Model.findOne<T>(this.tableName, this.options, this.orm);
       }
 
-      async count(): Promise<number> {
+      count(): number {
         const { where = {} } = this.options;
-        let sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-        let params: any[] = [];
-
-        if (Object.keys(where).length > 0) {
-          const whereClause = Object.keys(where)
-            .map((key) => `${key} = ?`)
-            .join(" AND ");
-          sql += ` WHERE ${whereClause}`;
-          params = Object.values(where);
-        }
-
-        const result = await this.orm.query<{ count: number }>(sql, params);
-        return result[0]?.count || 0;
+        return Model.count(this.tableName, where, this.orm);
       }
     }
 
@@ -573,77 +872,150 @@ class ModelFactory {
         Object.assign(this, data);
       }
 
-      // Méthodes d'instance
-      async save(): Promise<T> {
+      // Méthodes d'instance - Synchrones
+      save(): T {
         if (this.id) {
-          const result = await Model.update<T>(
+          const result = Model.update<T>(
             tableName,
             this.id,
             this as Partial<T>,
             orm
           );
-          Object.assign(this, result);
+          if (result) Object.assign(this, result);
           return result!;
         } else {
-          const result = await Model.create<T>(
-            tableName,
-            this as Partial<T>,
-            orm
-          );
+          const result = Model.create<T>(tableName, this as Partial<T>, orm);
           this.id = result.id;
           Object.assign(this, result);
           return result;
         }
       }
 
-      async delete(): Promise<boolean> {
+      // Méthodes d'instance - Asynchrones
+      async saveAsync(): Promise<T> {
+        return new Promise((resolve, reject) => {
+          try {
+            setImmediate(() => {
+              try {
+                const result = this.save();
+                resolve(result);
+              } catch (error) {
+                reject(error);
+              }
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+      }
+
+      delete(): boolean {
         if (this.id) {
-          return await Model.delete(tableName, this.id, orm);
+          return Model.delete(tableName, this.id, orm);
         }
         return false;
       }
 
-      // Méthodes statiques - CRUD de base
-      static async createTable(): Promise<QueryResult> {
-        return await Model.createTable(tableName, schema, orm);
+      async deleteAsync(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+          try {
+            setImmediate(() => {
+              try {
+                const result = this.delete();
+                resolve(result);
+              } catch (error) {
+                reject(error);
+              }
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
       }
 
-      static async create(data: Partial<T>): Promise<T> {
-        return await Model.create<T>(tableName, data, orm);
+      // Méthodes statiques - CRUD de base (maintenant synchrones)
+      static createTable(): QueryResult {
+        return Model.createTable(tableName, schema, orm);
       }
 
-      static async findAll(options: QueryOptions = {}): Promise<T[]> {
-        return await Model.findAll<T>(tableName, orm, options);
+      static create(data: Partial<T>): T {
+        return Model.create<T>(tableName, data, orm);
       }
 
-      static async findById(
+      static createMany(dataArray: Partial<T>[]): T[] {
+        return Model.createMany<T>(tableName, dataArray, orm);
+      }
+
+      static findAll(options: QueryOptions = {}): T[] {
+        return Model.findAll<T>(tableName, orm, options);
+      }
+
+      static findById(
         id: string | number,
         options: { include?: IncludeOptions | IncludeOptions[] } = {}
-      ): Promise<T | null> {
-        return await Model.findById<T>(tableName, id, orm, options);
+      ): T | null {
+        return Model.findById<T>(tableName, id, orm, options);
       }
 
-      static async findOne(options: QueryOptions): Promise<T | null> {
-        return await Model.findOne<T>(tableName, options, orm);
+      static findOne(options: QueryOptions): T | null {
+        return Model.findOne<T>(tableName, options, orm);
       }
 
-      static async update(
-        id: string | number,
+      static exists(conditions: WhereConditions): boolean {
+        return Model.exists(tableName, conditions, orm);
+      }
+
+      static findOrCreate(
+        conditions: WhereConditions,
+        defaults: Partial<T> = {}
+      ): { record: T; created: boolean } {
+        return Model.findOrCreate<T>(tableName, conditions, defaults, orm);
+      }
+
+      static update(id: string | number, data: Partial<T>): T | null {
+        return Model.update<T>(tableName, id, data, orm);
+      }
+
+      static updateWhere(
+        conditions: WhereConditions,
         data: Partial<T>
-      ): Promise<T | null> {
-        return await Model.update<T>(tableName, id, data, orm);
+      ): number {
+        return Model.updateWhere<T>(tableName, conditions, data, orm);
       }
 
-      static async delete(id: string | number): Promise<boolean> {
-        return await Model.delete(tableName, id, orm);
+      static increment(
+        id: string | number,
+        column: string,
+        value: number = 1
+      ): T | null {
+        return Model.increment<T>(tableName, id, column, value, orm);
       }
 
-      static async deleteWhere(conditions: WhereConditions): Promise<number> {
-        return await Model.deleteWhere(tableName, conditions, orm);
+      static decrement(
+        id: string | number,
+        column: string,
+        value: number = 1
+      ): T | null {
+        return Model.decrement<T>(tableName, id, column, value, orm);
       }
 
-      static async upsert(data: Partial<T>): Promise<T> {
-        return await Model.upsert<T>(tableName, data, orm);
+      static delete(id: string | number): boolean {
+        return Model.delete(tableName, id, orm);
+      }
+
+      static deleteWhere(conditions: WhereConditions): number {
+        return Model.deleteWhere(tableName, conditions, orm);
+      }
+
+      static upsert(data: Partial<T>): T {
+        return Model.upsert<T>(tableName, data, orm);
+      }
+      static upsertWithCoalesce(data: Partial<T>): T {
+        return Model.upsertWithCoalesce<T>(tableName, data, orm);
+      }
+
+      static count(conditions: WhereConditions = {}): number {
+        return Model.count(tableName, conditions, orm);
       }
 
       // Query Builder methods - Méthodes fluides

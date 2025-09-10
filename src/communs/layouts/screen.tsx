@@ -64,6 +64,7 @@ function NewNote() {
 
 
     const handleNewNote = async () => {
+        const usersessionid = JSON.parse(window.api.db.getsessionid())
         const placeholderText = `{"type":"doc","content":[{"type":"heading","attrs":{"textAlign":null,"level":1},"content":[{"type":"text","text":"Entrez votre titre"}]},{"type":"paragraph","attrs":{"textAlign":null},"content":[{"type":"text","text":"Écrivez votre note et autres ici."}]}]}`
         const newnote: Notes = {
             body: placeholderText,
@@ -72,19 +73,16 @@ function NewNote() {
             grouped: idgroupe,
             created: new Date(),
             modified: new Date(),
-            creator: userinfos.id, // Replace with actual user ID
+            creator: usersessionid.id, // Replace with actual user ID
         }
 
         const note = await window.api.db.setnote(newnote)
 
         console.log(note)
 
-        // navigate(`/note/${note.id}`, {
-        //     state: {
-        //         note: newnote
-        //     }
-        // });
-        // console.log(note)
+        navigate(`/note/${note.id}`, {
+            state: { note }
+        });
     }
 
 
@@ -101,7 +99,7 @@ function NavItems({ icon, url = "/" }: { icon: (actived: boolean) => React.JSX.E
     const navigation = useLocation()
 
     useEffect(() => {
-        setIsActived(window.location.pathname === url);
+        setIsActived(navigation.pathname === url);
     }, [navigation]);
     return (
         <NavLink to={url} className={`flex items-center gap-2 p-2  ${isActived ? 'bg-gray-200' : ''} transition-colors duration-200 w-[80%] aspect-square rounded-full justify-center hover:bg-gray-200`}>

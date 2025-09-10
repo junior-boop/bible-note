@@ -15,7 +15,7 @@
   align-items: center;
   gap: 0.25rem;
 
-  &-group {
+  .tiptap-toolbar-group {
     display: flex;
     align-items: center;
     gap: 0.125rem;

@@ -7,7 +7,14 @@ import {
   type User as UserType,
 } from "./db";
 import { v4 as uuidv4 } from "uuid";
-// import Database from "better-sqlite3";
+import Database from "better-sqlite3";
+
+export function checkDatabase() {
+  const db = new Database("./notes.sqlite");
+  const stml = db.prepare("SELECT 1+1 AS result");
+  const result = stml.run();
+  return result;
+}
 
 const orm = new SimpleORM("./notes.sqlite");
 const db = new ModelFactory(orm);
@@ -39,19 +46,59 @@ export async function getNoteById(id: string) {
   }
 }
 
-export async function getNotes() {
-  const result = await Notes.orderBy("modified", "DESC");
+export async function getAllNotes() {
+  const result = await Notes.orderBy("modified", "DESC")
+    .where({ pinned: 0 })
+    .where({ archived: 0 })
+    .findAll();
+  return result;
 }
 
-export async function setNote(noteData: NotesType) {
+export function getNotesArchived() {
   try {
-    const result = await Notes.upsert({
+    const result = Notes.where({ archived: 1 })
+      .orderBy("modified", "DESC")
+      .findAll();
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export function setNotesArchived(data: NotesType) {
+  console.log(data);
+  return Notes.update(data.id as string, {
+    archived: data.archived ? 1 : 0,
+    modified: new Date(),
+  });
+}
+
+export function getNotesPinned() {
+  const result = Notes.where({ pinned: 1 })
+    .orderBy("modified", "DESC")
+    .findAll();
+  return result;
+}
+
+export function setNotePinned(data: NotesType) {
+  return Notes.update(data.id as string, {
+    pinned: data.pinned ? 1 : 0,
+    modified: new Date(),
+  });
+}
+
+export function createNote(data: NotesType) {
+  try {
+    const result = Notes.upsert({
       id: uuidv4(),
-      body: noteData.body,
-      grouped: noteData.grouped,
-      creator: noteData.creator,
-      archived: noteData.archived,
-      pinned: noteData.pinned,
+      body: data.body,
+      grouped: data.grouped,
+      creator: data.creator,
+      archived: data.archived,
+      pinned: data.pinned,
+      created: new Date(),
+      modified: new Date(),
     });
     return result;
   } catch (e) {
@@ -60,9 +107,42 @@ export async function setNote(noteData: NotesType) {
   }
 }
 
-export async function deleteNote(id: string) {
+export function setNote(noteData: NotesType) {
   try {
-    const result = await Notes.delete(id);
+    const result = Notes.upsert({
+      id: uuidv4(),
+      body: noteData.body,
+      grouped: noteData.grouped,
+      creator: noteData.creator,
+      archived: noteData.archived,
+      pinned: noteData.pinned,
+      created: new Date(),
+      modified: new Date(),
+    });
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function updateNote(data: NotesType) {
+  try {
+    // const result = Notes.findById(data.id as string);
+    const result = Notes.update(data.id as string, {
+      body: data.body,
+      modified: new Date(),
+    });
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export function deleteNote(id: string) {
+  try {
+    const result = Notes.delete(id);
     return result;
   } catch (e) {
     console.error(e);
@@ -73,8 +153,8 @@ export async function deleteNote(id: string) {
 // Create the group table if it doesn't exist
 
 const Groupe = db.createModel<GroupeType>("groups", {
-  id: "TEXT PRIMARY KEY NO NULL",
-  name: "TEXT NO NULL",
+  id: "TEXT PRIMARY KEY NOT NULL",
+  name: "TEXT NOT NULL",
   created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
   modified: "DATETIME DEFAULT CURRENT_TIMESTAMP",
 });
@@ -85,9 +165,9 @@ const createGroupTable = async () => {
 
 // Create the group table if it doesn't exist
 const Users = db.createModel<UserType>("users", {
-  id: "TEXT PRIMARY KEY NO NULL",
-  name: "TEXT NO NULL",
-  email: "TEXT NO NULL UNIQUE",
+  id: "TEXT PRIMARY KEY NOT NULL",
+  name: "TEXT NOT NULL",
+  email: "TEXT NOT NULL UNIQUE",
   lastlogin: "TEXT",
   lastlogout: "TEXT",
   created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
@@ -97,9 +177,70 @@ const createUserTable = async () => {
   await Users.createTable();
 };
 
+export function setUser(user: UserType): UserType | null {
+  try {
+    const check = Users.findOne({ where: { email: user.email } });
+
+    if (check) {
+      return check;
+    }
+    const result = Users.create({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      lastlogin: user.lastlogin,
+      lastlogout: user.lastlogout,
+    });
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getAllUser() {
+  try {
+    const result = await Users.orderBy("modified", "DESC").findAll();
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getUser(id: string): Promise<UserType | null> {
+  try {
+    const result = await Users.findById(id);
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function updateUser(user: UserType): Promise<UserType | null> {
+  try {
+    const result = await Users.update(user.id, user);
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function deleteUser(id: string): Promise<boolean | null> {
+  try {
+    const result = await Users.delete(id);
+    return result;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
 const Session = db.createModel<SessionType>("session", {
-  id: "TEXT PRIMARY KEY NO NULL",
-  iduser: "TEXT NO NULL",
+  id: "TEXT PRIMARY KEY NOT NULL",
+  iduser: "TEXT NOT NULL",
   name: "TEXT NULL",
   email: "TEXT NULL",
 });
@@ -117,29 +258,20 @@ export async function getSession(): Promise<SessionType | null> {
   }
 }
 
-export async function setSession(data: UserType): Promise<SessionType | null> {
-  try {
-    const session = await Session.upsert({
-      id: "sessionuser-01",
-      iduser: data.id,
-      email: data.email,
-      name: data.name,
-    });
+export function setSession(data: UserType): SessionType | null {
+  const session = Session.upsertWithCoalesce({
+    id: "sessionuser-01",
+    iduser: data.id,
+    email: data.email,
+    name: data.name,
+  });
 
-    return session;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
+  return session;
 }
 
-export async function deleteSession(id: string): Promise<Boolean | null> {
-  try {
-    const session = await Session.delete(id);
-    return session;
-  } catch (e) {
-    return null;
-  }
+export function deleteSession(id: string): Boolean | null {
+  const session = Session.delete(id);
+  return session;
 }
 
 export {
@@ -148,7 +280,6 @@ export {
   createUserTable,
   createSessionTable,
 };
-export default db;
 
 // Exemple d'utilisation avec export des clés et types
 /*

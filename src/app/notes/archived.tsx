@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FluentSearch32Filled, LineMdCloseSmall } from "../../lib/icons";
 import Title from "../../communs/ui/title";
 import Subtitle from "../../communs/ui/subtitle";
 
 import Noteliste from "../../communs/ui/NotesListe";
+import { Notes } from "../../lib/database/db";
 
 export default function ArchivePages() {
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+
+    const [notes, setNotes] = useState<Notes[] | null>(null)
 
 
     const handlesearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,6 +21,19 @@ export default function ArchivePages() {
             setIsSearching(false);
         }
     }
+
+    const handleNotes = useCallback(async () => {
+        setNotes(await window.api.db.getnotesarchived())
+    }, [])
+
+
+
+    useEffect(() => {
+        (async () => {
+            console.log(await window.api.db.getnotesarchived())
+        })()
+        handleNotes()
+    }, [handleNotes])
 
     return (
         <div className="w-full h-dvh">
@@ -38,12 +54,12 @@ export default function ArchivePages() {
                 </div>
 
                 {
-                    // notes.length > 0 && (<>
-                    //     <div className="mt-8"></div>
-                    //     <div className="px-2">
-                    //         <Noteliste data={notes as Notes[]} />
-                    //     </div>
-                    // </>)
+                    notes && notes.length > 0 && (<>
+                        <div className="mt-8"></div>
+                        <div className="px-2">
+                            <Noteliste data={notes as Notes[]} />
+                        </div>
+                    </>)
                 }
 
             </div>
