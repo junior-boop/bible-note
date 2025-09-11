@@ -12,7 +12,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     const content = JSON.parse(body || "{}") as { content: { type: string, content: { type: string, text: string }[] }[] } || {};
     const [isHome, setIshome] = useState(false)
     const [archived, setArchived] = useState(data.archived >= 1 ? true : false)
-    const { toggleNotePinned, toggleNoteArchived, deleteNote } = useDatabase();
+    const { toggleNotePinned, toggleNoteArchived, deleteNote, groupedQuery } = useDatabase();
 
 
 
@@ -20,11 +20,10 @@ export default function NoteItems({ data }: { data: Notes }) {
     const paragraph = (d: { text: string }) => <p className="mb-0">{d.text}</p>;
     const titre = (d: { text: string }) => <div className="text-base mb-2 font-semibold">{d.text}</div>
 
-
     const navigate = useNavigate()
     const location = useLocation()
 
-    // const groupe = store.useQuery(queryDb(tables.groupes.where({ id: data.grouped as string })))
+    const groupe = groupedQuery?.where(groupe => groupe.id === data.grouped)
 
     const textContent = content.content?.map((item, i) => {
         if (i === 0 && item.type === "heading") {
@@ -83,7 +82,6 @@ export default function NoteItems({ data }: { data: Notes }) {
             archived: !archived
         })
     }
-    // console.log("NoteItems data", textContent);
 
     useEffect(() => {
         const locationNote = location.pathname === "/"
@@ -146,13 +144,13 @@ export default function NoteItems({ data }: { data: Notes }) {
             <div className="h-full w-full overflow-hidden relative max-h-[393px] z-[1] p-4">
                 {textContent}
             </div>
-            {/* {
-                groupe.length > 0 && <div className="bg-slate-200 px-4 py-2 rounded-b-xl">
+            {
+                groupe && groupe.length > 0 && <div className="bg-slate-200 px-4 py-2 rounded-b-xl">
                     {
-                        groupe[0].name.length > 25 ? `${groupe[0].name.substring(0, 25)}...` : groupe[0].name
+                        groupe[0] && groupe[0].name.length > 25 ? `${groupe[0].name.substring(0, 25)}...` : groupe[0].name
                     }
                 </div>
-            } */}
+            }
         </div>
     )
 }

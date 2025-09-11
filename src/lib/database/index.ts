@@ -5,6 +5,7 @@ import {
   type Notes as NotesType,
   type Groups as GroupeType,
   type User as UserType,
+  Groups,
 } from "./db";
 import { v4 as uuidv4 } from "uuid";
 import Database from "better-sqlite3";
@@ -32,13 +33,13 @@ const Notes = db.createModel<NotesType>("notes", {
   modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
 });
 
-const createNotesTable = async () => {
-  await Notes.createTable();
+const createNotesTable = () => {
+  Notes.createTable();
 };
 
-export async function getNoteById(id: string) {
+export function getNoteById(id: string) {
   try {
-    const result = await Notes.findById(id);
+    const result = Notes.findById(id);
     return result;
   } catch (e) {
     console.error(e);
@@ -147,6 +148,12 @@ export function deleteNote(id: string) {
   }
 }
 
+export function addNoteToGroup(data: NotesType) {
+  return Notes.update(data.id as string, {
+    grouped: data.grouped,
+  });
+}
+
 // Create the group table if it doesn't exist
 
 const Groupe = db.createModel<GroupeType>("groups", {
@@ -156,9 +163,33 @@ const Groupe = db.createModel<GroupeType>("groups", {
   modified: "DATETIME DEFAULT CURRENT_TIMESTAMP",
 });
 
-const createGroupTable = async () => {
-  await Groupe.createTable();
+const createGroupTable = () => {
+  Groupe.createTable();
 };
+
+export function getGroups() {
+  return Groupe.orderBy("modified", "DESC").findAll();
+}
+
+export function setGroup(data: Groups) {
+  return Groupe.create({
+    id: uuidv4(),
+    name: data.name,
+    created: new Date(),
+    modified: new Date(),
+  });
+}
+
+export function updatedGroup(data: Groups) {
+  return Groupe.update(data.id, {
+    name: data.name,
+    modified: new Date(),
+  });
+}
+
+export function deletedGroup(id: string) {
+  return Groupe.delete(id);
+}
 
 // Create the group table if it doesn't exist
 const Users = db.createModel<UserType>("users", {

@@ -7,7 +7,7 @@ import React, {
     ReactNode,
     useMemo
 } from 'react';
-import { Notes, usersession } from '../../lib/database/db';
+import { Groups, Notes, usersession } from '../../lib/database/db';
 import { QueryBuilder } from './QueryBuilder';
 
 // Définition d'un type pour les erreurs de base de données
@@ -20,14 +20,19 @@ type DatabaseError = {
 // Interface améliorée avec gestion d'erreurs
 interface DatabaseContextType {
     notesQuery: QueryBuilder<Notes> | null;
+    groupedQuery: QueryBuilder<Groups> | null;
     session: usersession | null;
     isLoading: boolean;
     error: DatabaseError | null;
-    addNote: (noteData: Partial<Notes>) => Promise<void>;
+    addNote: (noteData: Partial<Notes>) => Promise<Notes | undefined>;
     updateNote: (noteData: Notes) => Promise<void>;
     deleteNote: (id: string) => Promise<void>;
     toggleNotePinned: (note: Notes) => Promise<void>;
     toggleNoteArchived: (note: Notes) => Promise<void>;
+    addNotetoGroup: (data: { id: string, grouped: string }) => Promise<Notes>;
+    addGroup: (data: Groups) => Promise<Groups>;
+    updatedGroup: (data: Groups) => Promise<Groups>;
+    deletedGroup: (id: string) => Boolean | ['impossible'];
     clearError: () => void;
 }
 
@@ -35,6 +40,7 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const [notesQuery, setNotes] = useState<QueryBuilder<Notes> | null>(null);
+    const [groupedQuery, setGrouped] = useState<QueryBuilder<Groups> | null>(null);
     const [session, setSession] = useState<usersession | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<DatabaseError | null>(null);
@@ -59,12 +65,15 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
         clearError();
         try {
-            const [notesResult, sessionResult] = await Promise.all([
+            const [notesResult, sessionResult, groupesResult] = await Promise.all([
                 window.api.db.getnotes(),
-                window.api.db.getsession()
+                window.api.db.getsession(),
+                window.api.db.getgroupes()
             ]);
             const notesArray = new QueryBuilder<Notes>(notesResult || []);
+            const groupArray = new QueryBuilder<Groups>(groupesResult || [])
             setNotes(notesArray);
+            setGrouped(groupArray)
             setSession(sessionResult || null);
         } catch (error) {
             handleError(error, 'initial data loading');
@@ -80,18 +89,19 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const addNote = useCallback(async (noteData: Notes) => {
         clearError();
         try {
-            await window.api.db.setnote(noteData);
+            const result = await window.api.db.setnote(noteData);
             loadInitialData();
+
+            return result;
         } catch (error) {
             handleError(error, 'adding note');
         }
-    }, [handleError, clearError, loadInitialData]);
+    }, [loadInitialData]);
 
     const updateNote = useCallback(async (noteData: { id: string, body: string }) => {
         clearError();
         try {
-            const updatedNote = await window.api.db.modifynoteid(noteData);
-            notesQuery?.update(noteData.id, { body: noteData.body, modified: updatedNote?.modified });
+            await window.api.db.modifynoteid(noteData);
             loadInitialData();
         } catch (error) {
             handleError(error, 'updating note');
@@ -133,9 +143,56 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [handleError, clearError, loadInitialData]);
 
+    const addNotetoGroup = useCallback(async (data: Groups) => {
+        clearError();
+        try {
+            const result = await window.api.db.addnotetogroup(data);
+            loadInitialData();
+
+            return result;
+        } catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
+    const addGroup = useCallback(async (data: Groups) => {
+        clearError();
+        try {
+            const result = await window.api.db.setgroup(data);
+            loadInitialData();
+
+            return result;
+        } catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
+    const updatedGroup = useCallback(async (data: { id: string, name: string }) => {
+        clearError();
+        try {
+            const result = await window.api.db.modifiedgroup(data);
+            loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
+    const deletedGroup = useCallback(async (id: string) => {
+        clearError();
+        try {
+            const result = await window.api.db.deletegroup(id);
+            loadInitialData();
+            return result;
+        } catch (error) {
+            handleError(error, 'adding note');
+        }
+    }, [loadInitialData])
+
     // Optimisation avec useMemo pour la valeur du contexte
     const contextValue = useMemo(() => ({
         notesQuery,
+        groupedQuery,
         session,
         isLoading,
         error,
@@ -144,9 +201,14 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deleteNote,
         toggleNotePinned,
         toggleNoteArchived,
+        addNotetoGroup,
+        addGroup,
+        updatedGroup,
+        deletedGroup,
         clearError
     }), [
         notesQuery,
+        groupedQuery,
         session,
         isLoading,
         error,
@@ -155,6 +217,10 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
         deleteNote,
         toggleNotePinned,
         toggleNoteArchived,
+        addNotetoGroup,
+        addGroup,
+        updatedGroup,
+        deletedGroup,
         clearError
     ]);
 

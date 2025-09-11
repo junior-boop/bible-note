@@ -3,7 +3,8 @@ import Title from "../../../communs/ui/title";
 import { FluentAdd32Regular, FluentCheckmark32Regular, FluentDelete32Regular, FluentEdit32Regular, FluentMoreHorizontal32Regular } from "../../../lib/icons";
 import { useEffect, useState } from "react";
 import Subtitle from "../../../communs/ui/subtitle";
-import NoteColumn, { NoteColumn2 } from "../../../communs/ui/notecolumn";
+import { useDatabase } from "../../../communs/context/databaseprovide";
+import { NoteColumn2 } from "../../../communs/ui/notecolumn";
 
 export default function GroupeLayouts() {
     const [isHome, setIsHome] = useState(false)
@@ -52,28 +53,28 @@ const HomeGroupPage = () => {
 
 export function AsideList() {
     const [groupName, setGroupName] = useState<string | null>("")
-    // const { store } = useStore()
-    // const handleNewGroup = () => {
-    //     if (groupName?.length > 0) {
-    //         store.commit(events.createGroup({
-    //             id: crypto.randomUUID(),
-    //             name: groupName as string,
-    //             created: new Date(),
-    //             modified: new Date()
-    //         }))
-    //     }
+    const { addGroup, groupedQuery } = useDatabase()
+    const navigate = useNavigate()
+    const handleNewGroup = async () => {
+        if (groupName?.length > 0) {
+            const groupe = await addGroup({
+                name: groupName as string,
+            })
+            setTimeout(() => {
+                navigate(`/groupes/dossier/${groupe.id}`)
+            }, 500)
+        }
+        setGroupName("")
+    }
 
-    //     setGroupName("")
-    // }
-
-    // const handleGroupeList = store.useQuery(queryDb(tables.groupes.orderBy("modified", "desc")))
+    const handleGroupeList = groupedQuery?.orderBy("modified", "desc")
 
     return (
         <div className="w-[250px] h-full border-r border-slate-300 bg-slate-50">
             <div className="h-[56px] px-4 flex items-center border-b border-slate-200">
                 <div className="flex w-full">
                     <input value={groupName as string} onChange={({ target }) => setGroupName(target.value)} type="text" className="focus:outline-none flex-1 w-[180px]" placeholder="Ajouter un dossier" />
-                    <button className="w-[42px] h-[42px] flex items-center justify-center">
+                    <button onClick={handleNewGroup} className="w-[42px] h-[42px] flex items-center justify-center">
                         <FluentAdd32Regular className="h-6 w-6" />
                     </button>
                 </div>
@@ -85,9 +86,9 @@ export function AsideList() {
                 </div>
             </div>
             <div>
-                {/* {
-                    handleGroupeList.map((el, key) => <GroupeItems data={el} key={key} />)
-                } */}
+                {
+                    handleGroupeList?.map((el, key) => <GroupeItems data={el} key={key} />)
+                }
             </div>
         </div>
     )
@@ -106,22 +107,21 @@ const GroupeItems = ({ data }) => {
 
 const GroupeUpdate = ({ data, onClick }: { onClick: () => void }) => {
     const [change, setChange] = useState(data.name)
-    // const { store } = useStore()
+    const { updatedGroup } = useDatabase()
 
-    // const handleUpdateGroup = () => {
-    //     store.commit(events.modifyGroup({
-    //         id: data.id,
-    //         name: change as string,
-    //         modified: new Date()
-    //     }))
+    const handleUpdateGroup = () => {
+        updatedGroup({
+            id: data.id,
+            name: change as string,
+        })
 
-    //     onClick()
-    // }
+        onClick()
+    }
 
     return (
         <div className="px-4 py-3 hover:bg-slate-200 flex items-center">
             <input multiple value={change} onChange={({ target }) => setChange(target.value)} className="focus:outline-none border-b" />
-            <button>
+            <button onClick={handleUpdateGroup}>
                 <FluentCheckmark32Regular className="h-5 w-5" />
             </button>
         </div>
@@ -130,14 +130,19 @@ const GroupeUpdate = ({ data, onClick }: { onClick: () => void }) => {
 
 const Items = ({ data, onClick }: { onClick: () => void }) => {
     const [isLocate, setIsLocate] = useState(false)
-    // const { store } = useStore()
+    const { deletedGroup, notesQuery, groupedQuery } = useDatabase()
+    const navigate = useNavigate()
+
     const { id } = useParams()
     const location = useLocation()
-    // const handleDelete = () => {
-    //     store.commit(events.deleteGroup({
-    //         id: data.id
-    //     }))
-    // }
+    const handleDelete = () => {
+        const listedesgroupe = groupedQuery?.where(group => group.id !== data.id)
+        console.log(listedesgroupe[0]?.id)
+        navigate(`/groupes/dossier/${listedesgroupe[0]?.id}`)
+        deletedGroup(data.id)
+    }
+
+    const listedenotes = notesQuery?.where(note => note.grouped === data.id)
 
     useEffect(() => {
         setIsLocate(false)
@@ -163,112 +168,13 @@ const Items = ({ data, onClick }: { onClick: () => void }) => {
                 <button onClick={onClick}>
                     <FluentEdit32Regular className="h-5 w-5" />
                 </button>
-                <button>
-                    <FluentDelete32Regular className="h-5 w-5" />
-                </button>
+                {
+                    listedenotes?.length === 0 ? (<button onClick={handleDelete}>
+                        <FluentDelete32Regular className="h-5 w-5" />
+                    </button>)
+                        : null
+                }
             </div>
-        </div>
-    )
-}
-
-function NoteItems({ data }: { data: Notes }) {
-    const { id, body } = data;
-    const [openMenu, setOpenMenu] = useState(false)
-    const content = JSON.parse(body || "{}") as { content: { type: string, content: { type: string, text: string }[] }[] } || {};
-
-
-
-    const heading = (d: { text: string }) => <div className="font-semibold">{d.text}</div>;
-    const paragraph = (d: { text: string }) => <p className="mb-0">{d.text}</p>;
-    const titre = (d: { text: string }) => <div className="text-base mb-2 font-semibold">{d.text}</div>
-
-
-
-    const navigate = useNavigate()
-
-
-    const textContent = content.content?.map((item, i) => {
-        if (i === 0 && item.type === "heading") {
-            return titre(item.content[0])
-        }
-        if (item.type === "paragraph") {
-            if (item.content && item.content.length > 0) {
-                return paragraph(item.content[0]);
-            }
-        }
-
-        if (item.type === "heading") {
-            return heading(item.content[0]);
-        }
-
-
-
-        return null;
-    });
-
-
-    // const handleDelete = () => {
-    //     setOpenMenu(false)
-    //     store.commit(events.deletedNote({
-    //         id,
-    //         deleted: new Date(),
-    //     }));
-    // }
-
-    const handleOpen = () => {
-        setOpenMenu(false)
-        navigate(`/note/${id}`, {
-            state: {
-                note: data
-            }
-        })
-    }
-
-    const handleArchiver = () => {
-        setOpenMenu(false)
-        // store.commit(events.archivedNote({
-        //     id,
-        //     archived: !data.archived
-        // }))
-    }
-
-    return (
-        <div className="noteitems text-[14px] bg-slate-50 mb-4 w-full rounded-xl max-h-[425px]  relative">
-
-            <div className="noteovermouse absolute top-0 left-0  w-full z-[5] ">
-                <div className="relative h-full w-full bg-slate-50">
-                    <div className="absolute flex items-center gap-4 top-3 right-3 p-2 bg-slate-200 rounded-xl">
-
-                        <button onClick={() => setOpenMenu(!openMenu)} className="text-xs text-gray-700">
-                            <FluentMoreHorizontal32Regular className="w-5 h-5 rotate-90" />
-                            {
-                                openMenu && (<div className="relative">
-                                    <div className=" absolute top-0 right-[-50%] w-[150px] border border-slate-200 bg-white rounded-md shadow-md">
-                                        <ul className="py-1 w-full">
-                                            <button onClick={handleArchiver} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Archiver</li></button>
-                                            {/* <button onClick={handleDelete} className="w-full"><li className="text-base px-3 py-2 hover:bg-slate-50">Supprimer</li></button> */}
-
-                                        </ul>
-                                    </div>
-                                </div>)
-                            }
-                        </button>
-
-
-                    </div>
-                </div>
-            </div>
-            <button onClick={handleOpen} className="absolute h-full w-full z-[4] top-0 left-0"></button>
-            <div className="h-full w-full overflow-hidden relative max-h-[393px] z-[1] p-4">
-                {textContent}
-            </div>
-            {/* {
-                groupe.length > 0 && <div className="bg-slate-200 px-4 py-2 rounded-b-xl">
-                    {
-                        groupe[0].name.length > 25 ? `${groupe[0].name.substring(0, 25)}...` : groupe[0].name
-                    }
-                </div>
-            } */}
         </div>
     )
 }

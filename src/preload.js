@@ -21,11 +21,16 @@ contextBridge.exposeInMainWorld('api', {
     setnotesarchived : (data) => ipcRenderer.invoke('set-notes-archived', data),
     getnotespinned : () => ipcRenderer.invoke("get-notes-pinned"), 
     setnotespinned : (data) => ipcRenderer.invoke('set-notes-pinned', data), 
+    addnotetogroup : (data) => ipcRenderer.invoke("add-note-to-group", data), 
     setnote : (data) => ipcRenderer.invoke("set-note", data),
     deletenote : (id) => ipcRenderer.invoke("delete-note", id),
     getuserinfos : () => ipcRenderer.invoke("get-user-infos"),
     getsession : () => ipcRenderer.invoke("get-session"),
     setsession : (data) => ipcRenderer.invoke("set-session", data),
     deletesession : () => ipcRenderer.invoke("delete-session"),
+    getgroupes : () => ipcRenderer.invoke('get-groups'),
+    setgroup : (data) => ipcRenderer.invoke("set-group", data),
+    modifiedgroup : (id) => ipcRenderer.invoke('modified-group-id', id),
+    deletegroup : (id) => ipcRenderer.invoke("delete-group", id),
   }
 })

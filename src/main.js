@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { checkDatabase, createGroupTable, createNotesTable, createSessionTable, createUserTable, deleteNote, deleteSession, getAllNotes, getNoteById, getNotesArchived, getNotesPinned, getSession, setNote, setNotePinned, setNotesArchived, setSession, setUser, updateNote } from './lib/database';
+import { addNoteToGroup, checkDatabase, createGroupTable, createNotesTable, createSessionTable, createUserTable, deletedGroup, deleteNote, deleteSession, getAllNotes, getGroups, getNoteById, getNotesArchived, getNotesPinned, getSession, setGroup, setNote, setNotePinned, setNotesArchived, setSession, setUser, updatedGroup, updateNote } from './lib/database';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -126,6 +126,10 @@ ipcMain.handle("delete-note", (event, id) => {
   return deleteNote(id)
 })
 
+ipcMain.handle("add-note-to-group", (event, data) => {
+  return addNoteToGroup(data)
+})
+
 ipcMain.handle('set-external-data', async (event, data) => {
   const response = await fetch('https://nuvelserver.godigital.workers.dev/users/signin', {
     method: 'POST',
@@ -173,14 +177,29 @@ ipcMain.handle('set-session', (event, user) => {
 });
 
 ipcMain.handle('delete-session', async(event) => {
-  return await deleteSession()
+  return deleteSession()
 });
 
 ipcMain.handle('check-database', () => {
   return checkDatabase();
-});
+})
 
+// les groupes
+ipcMain.handle('get-groups', () => {
+  return getGroups()
+})
 
+ipcMain.handle('set-group', (event, data) => {
+  return setGroup(data)
+})
+
+ipcMain.handle('delete-group', (event, id) => {
+  return deletedGroup(id)
+})
+
+ipcMain.handle('modified-group-id', (event, data) => {
+  return updatedGroup(data)
+})
 
 // 'https://nuvelserver.godigital.workers.dev/users/signin'
 // 'https://nuvelserver.godigital.workers.dev/users'

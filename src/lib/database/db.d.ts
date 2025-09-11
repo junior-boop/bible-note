@@ -129,6 +129,10 @@ declare global {
         setnotespinned: (data) => Notes[];
         setnote: (data: Notes) => Promise<Notes>;
         deletenote: (id: string) => Promise<boolean>;
+        addnotetogroup: (data: {
+          id: string;
+          grouped: string;
+        }) => Promise<Notes>;
         getuserinfos: () => Promise<string>;
         getsession: () => Promise<usersession[] | []>;
         setsession: (data: User) => Promise<{
@@ -138,6 +142,16 @@ declare global {
           email: string;
         }>;
         deletesession: () => Promise<string>;
+        getgroupes: () => Promise<Groups[]>;
+        setgroup: (data: Groups) => Promise<Groups>;
+        modifiedgroup: ({
+          id,
+          name,
+        }: {
+          id: string;
+          name: string;
+        }) => Promise<Groups>;
+        deletegroup: (id: string) => Promise<Groups>;
       };
     };
   }

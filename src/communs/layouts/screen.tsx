@@ -4,10 +4,12 @@ import { FluentArchive32Filled, FluentArchive32Regular, FluentDocumentFolder32Fi
 import { useNavigate } from 'react-router-dom';
 import { Notes } from '../../lib/database/db';
 import { useGlobalContext } from '../context/global';
+import { useDatabase } from '../context/databaseprovide';
 
 export default function Screen() {
     const [onNote, setOnNote] = useState(false)
     const location = useLocation()
+
 
     useEffect(() => {
         setOnNote(location.pathname.includes("note"))
@@ -48,10 +50,7 @@ function NewNote() {
     const location = useLocation()
     const { id } = useParams()
     const [idgroupe, setIdGroup] = useState<string | null>('')
-
-    const { USER } = useGlobalContext()
-
-    const [userinfos] = USER
+    const { addNote } = useDatabase()
 
     useEffect(() => {
         if (location.pathname.includes("dossier")) {
@@ -74,10 +73,7 @@ function NewNote() {
             creator: usersessionid.id, // Replace with actual user ID
         }
 
-        const note = await window.api.db.setnote(newnote)
-
-        console.log(note)
-
+        const note = await addNote(newnote)
         navigate(`/note/${note.id}`, {
             state: { note }
         });

@@ -6,21 +6,27 @@ import { useLocation, useNavigate, useParams } from "react-router-dom"
 
 import Title from "../../../communs/ui/title";
 import { FluentMoreHorizontal32Regular } from "../../../lib/icons";
+import { useDatabase } from "../../../communs/context/databaseprovide";
 
 export default function DossierPage() {
     const { id } = useParams()
     const location = useLocation()
 
+    const { groupedQuery, notesQuery } = useDatabase()
 
+    const noteforthisgroup = notesQuery?.where(note => note.grouped === id)
+    const groupe = groupedQuery?.where(groupe => groupe.id === id)
     return (
         <div className="h-dvh w-full overflow-x-hidden overflow-y-auto">
             <div className="px-4 py-4">
                 <div className="mt-8 mb-4">
-                    <Title title={location.state.name} />
+                    <Title title={groupe[0].name} />
                 </div>
                 <div className="px-3">
                     <NoteColumn2>
-                        rien
+                        {
+                            noteforthisgroup?.map((el) => <NoteItems data={el} key={el.id} />)
+                        }
                     </NoteColumn2>
                 </div>
             </div>

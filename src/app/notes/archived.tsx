@@ -25,19 +25,6 @@ export default function ArchivePages() {
         }
     }
 
-    // const handleNotes = useCallback(async () => {
-    //     setNotes(await window.api.db.getnotesarchived())
-    // }, [])
-
-
-
-    // useEffect(() => {
-    //     (async () => {
-    //         console.log(notes)
-    //     })()
-    //     handleNotes()
-    // }, [handleNotes])
-
     return (
         <div className="w-full h-dvh">
             <div className="flex items-center gap-4 p-4 border-b border-gray-200 w-full">

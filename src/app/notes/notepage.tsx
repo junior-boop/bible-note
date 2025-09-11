@@ -3,6 +3,7 @@ import { SimpleEditor } from "../../../@/components/tiptap-templates/simple/simp
 
 import { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom"
+import { useDatabase } from "../../communs/context/databaseprovide";
 
 export default function EditorPage() {
     const [content, setContent] = useState<string>("")
@@ -10,7 +11,7 @@ export default function EditorPage() {
     const location = useLocation()
     const [isTyping, setIsTyping] = useState(false)
     const [savingState, setSavingState] = useState('Enregistrement...')
-
+    const { updateNote } = useDatabase()
 
 
     useEffect(() => {
@@ -25,7 +26,7 @@ export default function EditorPage() {
 
         const t1 = setTimeout(() => {
             console.log("active")
-            window.api.db.modifynoteid({
+            updateNote({
                 id: id,
                 body: content,
             })
@@ -49,7 +50,7 @@ export default function EditorPage() {
 
     const handlegoback = () => {
         console.log("active")
-        window.api.db.modifynoteid({
+        updateNote({
             id: id,
             body: content,
         })

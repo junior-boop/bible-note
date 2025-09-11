@@ -75,6 +75,7 @@ import BibleVerset from "../../../../src/communs/ui/bible_component/extension"
 
 
 import { useLocation, useNavigate } from "react-router-dom"
+import { useDatabase } from "../../../../src/communs/context/databaseprovide"
 
 
 const MainToolbarContent = ({
@@ -485,22 +486,22 @@ const DossierButton = ({ editor }: { editor: Editor }) => {
 
   const InputVerset = ({ onBlur }: { onBlur: () => void }) => {
     const [verse, setVerse] = React.useState<string>("")
-
+    const { groupedQuery, addNotetoGroup } = useDatabase()
 
     // console.log(location.pathname)
-
-    const handleNewState = (groupId: string) => {
+    const d = groupedQuery?.orderBy("modified", "desc")
+    const handleNewState = async (groupId: string) => {
       setNote({ ...note, grouped: groupId })
-
+      await addNotetoGroup({ id: state.id, grouped: groupId })
       setTimeout(() => {
         handleOpen()
       }, 1000)
 
     }
 
-    const handleNoGroup = () => {
+    const handleNoGroup = async () => {
       setNote({ ...note, grouped: "" })
-
+      await addNotetoGroup({ id: state.id, grouped: null })
       setTimeout(() => {
         handleOpen()
       }, 1000)
@@ -515,12 +516,12 @@ const DossierButton = ({ editor }: { editor: Editor }) => {
           {note.grouped === "" && <span className="w-[8px] h-[8px] rounded-full bg-slate-700"></span>}
         </button>
         {
-          // d.map((el, key) => (
-          //   <button onClick={() => handleNewState(el.id)} className={`flex items-center gap-2 justify-between w-full py-1 ${note.grouped === el.id ? "bg-gray-50" : ""} px-2 rounded-md mb-1`} key={key}>
-          //     <span className={`flex-1 ${note.grouped === el.id ? "font-semibold" : ""} text-[14px]`}>{el.name}</span>
-          //     {note.grouped === el.id && <span className="w-[8px] h-[8px] rounded-full bg-slate-700"></span>}
-          //   </button>
-          // ))
+          d && d.map((el, key) => (
+            <button onClick={() => handleNewState(el.id)} className={`flex items-center gap-2 justify-between w-full py-1 ${note.grouped === el.id ? "bg-gray-50" : ""} px-2 rounded-md mb-1`} key={key}>
+              <span className={`flex-1 ${note.grouped === el.id ? "font-semibold" : ""} text-[14px]`}>{el.name}</span>
+              {note.grouped === el.id && <span className="w-[8px] h-[8px] rounded-full bg-slate-700"></span>}
+            </button>
+          ))
         }
       </div>
     )
