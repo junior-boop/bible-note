@@ -13,10 +13,19 @@ export default function Screen() {
 
     useEffect(() => {
         setOnNote(location.pathname.includes("note"))
-        setOnNote(location.pathname.includes("groupes"))
+
+        if (location.pathname.includes('archives')) {
+            setOnNote(true)
+        }
+
+        if (location.pathname.includes("groupes") && !location.pathname.includes("dossier")) {
+            setOnNote(true)
+        }
         if (location.pathname.includes("groupes") && location.pathname.includes("dossier")) {
             setOnNote(false)
         }
+
+        console.log(location.pathname)
     }, [location])
     return (
         <div className="flex w-full h-dvh relative ">

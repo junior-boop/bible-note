@@ -92,7 +92,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     }, [])
 
     return (
-        <div className="noteitems text-[14px] bg-slate-50 mb-4 w-full max-h-[425px]  relative">
+        <div className="noteitems text-[14px] bg-slate-50 mb-4 w-full max-h-[425px] rounded-xl  relative">
 
             <div className="noteovermouse absolute top-0 left-0  w-full z-[5] ">
                 <div className="relative h-full w-full bg-slate-50">

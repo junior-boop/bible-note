@@ -5,10 +5,13 @@ import { useEffect, useState } from "react";
 import Subtitle from "../../../communs/ui/subtitle";
 import { useDatabase } from "../../../communs/context/databaseprovide";
 import { NoteColumn2 } from "../../../communs/ui/notecolumn";
+import NoteItems from "../../../communs/ui/noteitems";
 
 export default function GroupeLayouts() {
     const [isHome, setIsHome] = useState(false)
     const location = useLocation()
+
+
 
     useEffect(() => {
         const checkDossier = location.pathname.includes('/dossier')
@@ -31,6 +34,8 @@ export default function GroupeLayouts() {
 }
 
 const HomeGroupPage = () => {
+    const { notesQuery } = useDatabase()
+    const data = notesQuery?.where(note => note.grouped !== null).filter(note => note.modified)
     return (
         <div className="h-dvh w-full overflow-x-hidden overflow-y-auto">
             <div className="px-4 py-4">
@@ -39,9 +44,9 @@ const HomeGroupPage = () => {
                 </div>
                 <div className="px-3">
                     <NoteColumn2>
-                        {/* {
-                            data.map((el, key) => <NoteItems data={el} key={key} />)
-                        } */}
+                        {
+                            data && data.map((el, key) => <NoteItems data={el} key={key} />)
+                        }
 
                     </NoteColumn2>
                 </div>

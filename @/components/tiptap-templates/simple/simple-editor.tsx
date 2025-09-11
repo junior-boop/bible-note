@@ -398,9 +398,7 @@ const AddBibleVerset = ({ editor }: { editor: Editor }) => {
   }
   return (
     <div className="relative">
-      {/* <button onClick={() => setOpenVerset(!openVerset)} className="hover:bg-slate-100 w-[34px] h-[34px] rounded-xl flex justify-center items-center">
-        
-      </button> */}
+
       <Button
         type="button"
         disabled={false}
