@@ -32,5 +32,9 @@ contextBridge.exposeInMainWorld('api', {
     setgroup : (data) => ipcRenderer.invoke("set-group", data),
     modifiedgroup : (id) => ipcRenderer.invoke('modified-group-id', id),
     deletegroup : (id) => ipcRenderer.invoke("delete-group", id),
-  }
+    getaihistory : (id) => ipcRenderer.invoke("get-history", id)
+  },
+    agent : (context, prompt) => ipcRenderer.invoke("ai-agent", context, prompt),
+    aicorrectagent : (prompt) => ipcRenderer.invoke("ai-correct-agent", prompt)
+
 })

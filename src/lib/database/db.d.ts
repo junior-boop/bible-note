@@ -1,10 +1,11 @@
+import { AiHistoryType } from ".";
 import {
   filterProps,
   filterResultProps,
 } from "../../communs/ui/bible_component/livre";
 
 export type Notes = {
-  id?: string;
+  id: string;
   body: string;
   creator: string;
   pinned: 0 | 1;
@@ -152,7 +153,16 @@ declare global {
           name: string;
         }) => Promise<Groups>;
         deletegroup: (id: string) => Promise<Groups>;
+        getaihistory: (id: string) => Promise<AiHistoryType[]>;
       };
+      agent: (
+        context: {
+          iduser: string;
+          content: string;
+        },
+        promt: string
+      ) => Promise<{ text: string; history: AiHistoryType[] }>;
+      aicorrectagent: (promt: string) => Promise<{ text: string }>;
     };
   }
 }

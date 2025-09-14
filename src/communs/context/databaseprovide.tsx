@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { Groups, Notes, usersession } from '../../lib/database/db';
 import { QueryBuilder } from './QueryBuilder';
+import { AiHistoryType } from '@/src/lib/database';
 
 // Définition d'un type pour les erreurs de base de données
 type DatabaseError = {
@@ -41,6 +42,7 @@ const DatabaseContext = createContext<DatabaseContextType | undefined>(undefined
 export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     const [notesQuery, setNotes] = useState<QueryBuilder<Notes> | null>(null);
     const [groupedQuery, setGrouped] = useState<QueryBuilder<Groups> | null>(null);
+
     const [session, setSession] = useState<usersession | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<DatabaseError | null>(null);
@@ -85,6 +87,8 @@ export const DatabaseProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         loadInitialData();
     }, [loadInitialData]);
+
+
 
     const addNote = useCallback(async (noteData: Notes) => {
         clearError();

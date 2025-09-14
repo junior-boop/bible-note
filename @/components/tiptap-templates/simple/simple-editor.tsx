@@ -69,13 +69,16 @@ import { handleImageUpload, MAX_FILE_SIZE } from "../../../lib/tiptap-utils"
 
 // --- Styles ---
 import "../../tiptap-templates/simple/simple-editor.css"
-import { BibleVersetIcon, FluentArrowLeft32Filled, FluentArrowUp32Filled, FluentFolderLink32Regular, FluentImageAdd32Regular } from "../../../../src/lib/icons"
+import { BibleVersetIcon, FluentArrowLeft32Filled, FluentArrowUp32Filled, FluentFolderLink32Regular, FluentImageAdd32Regular, IcSharpWhatsapp } from "../../../../src/lib/icons"
 
 import BibleVerset from "../../../../src/communs/ui/bible_component/extension"
 
 
 import { useLocation, useNavigate } from "react-router-dom"
 import { useDatabase } from "../../../../src/communs/context/databaseprovide"
+
+import { toast } from "sonner"
+import { useCopyToClipboard } from "@uidotdev/usehooks";
 
 
 const MainToolbarContent = ({
@@ -165,6 +168,7 @@ const MainToolbarContent = ({
       </ToolbarGroup>
       <ToolbarGroup>
         <AddBibleVerset editor={editor as Editor} />
+        <Whatsappbutton editor={editor as Editor} />
       </ToolbarGroup>
 
       {isMobile && <ToolbarSeparator />}
@@ -211,7 +215,7 @@ const MenuFlottant = ({ editor, onHighlighterClick, onLinkClick, isMobile }: { e
 
 const StartingMenu = ({ editor, isMobile }: { editor: Editor, isMobile: boolean }) => {
   return (
-    <FloatingMenu editor={editor} className="border-slate-200 border rounded-lg realtive">
+    <FloatingMenu editor={editor} className="border-slate-200 border rounded-lg bg-white">
       <ToolbarGroup>
         <HeadingDropdownMenu levels={[1, 2, 3, 4]} portal={isMobile} />
         <ListDropdownMenu
@@ -253,7 +257,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ onChange, content, onBack }: { content: string, onChange: (data: string) => void, onBack: () => void }) {
+export function SimpleEditor({ onChange, content, onBack, ref }: { content: string, onChange: (data: string) => void, onBack: () => void, ref?: React.RefAttributes<HTMLDivElement> }) {
   const isMobile = useIsMobile()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = React.useState<
@@ -320,7 +324,7 @@ export function SimpleEditor({ onChange, content, onBack }: { content: string, o
     }
   }, [isMobile, mobileView])
 
-  // console.log("Editor content:", content)
+
 
   return (
     <div className="simple-editor-wrapper">
@@ -352,6 +356,7 @@ export function SimpleEditor({ onChange, content, onBack }: { content: string, o
         </Toolbar>
 
         <EditorContent
+          ref={ref as React.RefAttributes<HTMLDivElement>}
           editor={editor}
           role="presentation"
           className="simple-editor-content"
@@ -467,7 +472,7 @@ const AddImage = ({ editor, text }: { editor: Editor, text?: boolean }) => {
         tooltip="Ajouter une image"
       >
         <FluentImageAdd32Regular className="h-[18px] w-[18px]" />
-        {!text && <span className="tiptap-button-text">Ajouter</span>}
+        {/* {!text && <span className="tiptap-button-text">Ajouter</span>} */}
       </Button>
     </div>
   );
@@ -552,3 +557,238 @@ const DossierButton = ({ editor }: { editor: Editor }) => {
     </div>
   )
 }
+
+
+export function Whatsappbutton({ editor }: { editor: Editor }) {
+  const [copiedText, copyToClipboard] = useCopyToClipboard();
+  const handleOpen = () => {
+    htmlToWhatsApp(editor.getHTML())
+
+    const hasCopiedText = Boolean(copiedText);
+    toast("Event has been created.")
+  }
+  return (
+    <Button
+      type="button"
+      disabled={false}
+      data-style="ghost"
+      // data-active-state={isActive ? "on" : "off"}
+      data-disabled={false}
+      role="button"
+      tabIndex={-1}
+      aria-label={"Partage WhatsApp"}
+      // aria-pressed={isActive}
+      tooltip={"Partage WhatsApp"}
+      onClick={handleOpen}
+
+    > <IcSharpWhatsapp className="h-5 w-5" />
+      <span>whatsapp</span>
+    </Button>
+  )
+}
+
+
+/**
+ * Convertit du HTML en formatage WhatsApp
+ * @param {string} htmlString - La chaîne HTML à convertir
+ * @returns {string} - Le texte formaté pour WhatsApp
+ */
+function htmlToWhatsApp(htmlString: string) {
+  // console.log(htmlString)
+  // Créer un élément temporaire pour parser le HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = htmlString;
+
+  // Fonction récursive pour traiter les noeuds
+  function processNode(node) {
+    let result = '';
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      // Noeud texte simple
+      return node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      let content = '';
+
+      // Traiter récursivement tous les enfants
+      for (let child of node.childNodes) {
+        content += processNode(child);
+      }
+
+      // Appliquer le formatage selon le tag HTML
+      const tagName = node.tagName?.toLowerCase();
+      // console.log(tagName)
+      switch (tagName) {
+        case 'b':
+        case 'strong':
+          return `*${content}*`;
+
+        case 'i':
+        case 'em':
+          return `_${content}_`;
+
+        case 's':
+        case 'strike':
+        case 'del':
+          return `~${content}~`;
+
+        case 'code':
+          return `\`\`\`${content}\`\`\``;
+
+        case 'pre':
+          return `\`\`\`\n${content}\n\`\`\``;
+
+        case 'blockquote':
+          // Diviser en lignes et ajouter > à chaque ligne
+          return content.split('\n').map(line => `> ${line}`).join('\n');
+
+        case 'br':
+          return '\n';
+
+        case 'p':
+          return content + '\n\n';
+
+        case 'div':
+          return content + '\n';
+        case "bible-verset":
+          const entry = node.getAttribute("entry")
+          const check = /[;:\-v]/g
+          const replace = entry.replace(RegExp(check), ' ')
+          const spliter = replace.split(RegExp(/\s+/g))
+
+
+          const verset = window.api.bible({ livre: spliter[0] as string, chap: spliter[1] as string, vers1: spliter[2], vers2: spliter[3] })
+          let result = `*${verset?.reference}* \n > `
+          if (verset) {
+            for (let vers of verset.vers) {
+              const construct = `[${vers.n}] ${vers?.v} `
+              result += construct
+            }
+          }
+
+
+          return result;
+        case 'h1':
+          return `*${content.toUpperCase()}*\n\n`;
+        case 'h2':
+        case 'h3':
+        case 'h4':
+        case 'h5':
+        case 'h6':
+          return `*${content}*\n\n`;
+
+        case 'ul':
+        case 'ol':
+          return content + '\n';
+
+        case 'li':
+          // Déterminer si c'est dans une liste ordonnée ou non
+          const parentList = node.parentElement;
+          if (parentList?.tagName.toLowerCase() === 'ol') {
+            // Liste numérotée - on utilise juste un tiret car WhatsApp ne supporte pas vraiment les listes numérotées complexes
+            return `- ${content}\n`;
+          } else {
+            // Liste à puces
+            return `- ${content}\n`;
+          }
+
+        case 'a':
+          const href = node.getAttribute('href');
+          return href ? `${content} (${href})` : content;
+
+        default:
+          return content;
+      }
+    }
+
+    return result;
+  }
+
+  // Traiter tous les noeuds
+  let result = '';
+  for (let child of tempDiv.childNodes) {
+    result += processNode(child);
+  }
+
+  // Nettoyer le résultat
+  return result
+    .replace(/\n{3,}/g, '\n\n') // Remplacer les multiples sauts de ligne par maximum 2
+    .trim(); // Supprimer les espaces en début et fin
+}
+
+// Version alternative plus simple pour les cas basiques
+function htmlToWhatsAppSimple(htmlString) {
+  return htmlString
+    // Gras
+    .replace(/<(b|strong)>(.*?)<\/(b|strong)>/gi, '*$2*')
+    // Italique
+    .replace(/<(i|em)>(.*?)<\/(i|em)>/gi, '_$2_')
+    // Barré
+    .replace(/<(s|strike|del)>(.*?)<\/(s|strike|del)>/gi, '~$2~')
+    // Code
+    .replace(/<code>(.*?)<\/code>/gi, '```$1```')
+    // Pre (code block)
+    .replace(/<pre>(.*?)<\/pre>/gi, '```\n$1\n```')
+    // Citation
+    .replace(/<blockquote>(.*?)<\/blockquote>/gi, (match, content) => {
+      return content.split('\n').map(line => `> ${line}`).join('\n');
+    })
+    // Sauts de ligne
+    .replace(/<br\s*\/?>/gi, '\n')
+    // Paragraphes
+    .replace(/<p>(.*?)<\/p>/gi, '$1\n\n')
+    // Listes
+    .replace(/<li>(.*?)<\/li>/gi, '- $1\n')
+    // Liens
+    .replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi, '$2 ($1)')
+    // Supprimer les autres balises HTML
+    .replace(/<[^>]*>/g, '')
+    // Décoder les entités HTML
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Nettoyer les espaces multiples et sauts de ligne
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// Fonction de test
+function testConversion() {
+  const testHTML = `
+        <h1>Titre principal en majuscules</h1>
+        <h2>Sous-titre en Gras Normal</h2>
+        <h3>Titre de niveau 3</h3>
+        <p>Ceci est un paragraphe avec du <strong>texte en gras</strong> et du <em>texte en italique</em>.</p>
+        <p>On peut aussi avoir du <s>texte barré</s> et du <code>code inline</code>.</p>
+        <blockquote>Ceci est une citation importante</blockquote>
+        <ul>
+            <li>Premier élément de liste</li>
+            <li>Deuxième élément avec du <b>gras</b></li>
+            <li>Troisième élément</li>
+        </ul>
+        <pre>
+function exemple() {
+    console.log("Code block");
+}
+        </pre>
+        <p>Un lien vers <a href="https://example.com">Example.com</a></p>
+    `;
+
+  console.log("HTML original:");
+  console.log(testHTML);
+  console.log("\n" + "=".repeat(50) + "\n");
+  console.log("Conversion WhatsApp (méthode complète):");
+  console.log(htmlToWhatsApp(testHTML));
+  console.log("\n" + "=".repeat(50) + "\n");
+  console.log("Conversion WhatsApp (méthode simple):");
+  console.log(htmlToWhatsAppSimple(testHTML));
+}
+
+// Exporter les fonctions
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { htmlToWhatsApp, htmlToWhatsAppSimple };
+}
+
+// Exemple d'utilisation
+// testConversion();

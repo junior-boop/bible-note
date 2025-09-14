@@ -93,3 +93,18 @@
     }
   }
 }
+
+.tiptap-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+
+  &:empty {
+    display: none;
+  }
+
+  &:empty+.tiptap-separator,
+  .tiptap-separator+&:empty {
+    display: none;
+  }
+}

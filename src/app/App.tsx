@@ -1,4 +1,3 @@
-import { use, useCallback, useEffect, useState } from 'react';
 import Screen from '../communs/layouts/screen';
 import './App.css'
 import NotesPages from './notes';
@@ -6,20 +5,16 @@ import ArchivePages from './notes/archived';
 import DossierPage from './notes/groupes';
 import GroupeLayouts from './notes/groupes/layouts';
 import EditorPage from './notes/notepage';
-import { HashRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { HashRouter, Route, Routes } from 'react-router-dom'
 import MainLogin from './login';
 import GlobalProvider, { useGlobalContext } from '../communs/context/global';
 import { DatabaseProvider } from '../communs/context/databaseprovide';
-import { useDatabase } from '../communs/context/databaseprovide';
-import { QueryBuilder } from '../communs/context/QueryBuilder';
-import { Notes } from '../lib/database/db';
 
 
 
 const Router = () => {
   const { USER } = useGlobalContext()
   const [infos, setter] = USER
-  const location = useLocation()
 
   const usersession = JSON.parse(window.api.db.getsessionid())
 

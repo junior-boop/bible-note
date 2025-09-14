@@ -1,13 +1,19 @@
 import { SimpleEditor } from "../../../@/components/tiptap-templates/simple/simple-editor"
-
-
-import { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom"
+import { Toaster } from "../../../components/ui/sonner"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom"
 import { useDatabase } from "../../communs/context/databaseprovide";
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from "../../../components/ui/sheet";
-import { Button } from "../../../@/components/tiptap-ui-primitive/button";
-import { Label } from "@radix-ui/react-dropdown-menu";
-import { FluentSlideTextSparkle32Regular } from "../../lib/icons";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../../../components/ui/sheet";
+import { FluentArrowUp32Filled, FluentSlideTextSparkle32Regular } from "../../lib/icons";
+import { Textarea } from "../../../components/ui/textarea"
+import { QueryBuilder } from "../../../src/communs/context/QueryBuilder";
+import { AiHistoryType } from "../../../src/lib/database";
+import { QueryForTable } from "../../../src/communs/context/Queryuilder_2";
+import { marked } from "marked";
+import { v4 as uuidv4 } from "uuid";
+import moment from 'moment'
+
+
 
 export default function EditorPage() {
     const [content, setContent] = useState<string>("")
@@ -16,14 +22,18 @@ export default function EditorPage() {
     const [isTyping, setIsTyping] = useState(false)
     const [savingState, setSavingState] = useState('Enregistrement...')
     const { updateNote } = useDatabase()
+    const editorRef = useRef<HTMLDivElement>(null)
+    const [corriger, setCorriger] = useState(content)
 
+    const getinitnote = useCallback(async () => {
+        const noteid = location.state.note.id
+        const note = await window.api.db.getnotesid(noteid)
+        setContent(note.body)
+    }, [])
 
     useEffect(() => {
-        const contentBody = location.state.note.body
-        if (contentBody) {
-            setContent(contentBody)
-        }
-    }, [])
+        getinitnote()
+    }, [getinitnote])
 
 
     useEffect(() => {
@@ -31,7 +41,7 @@ export default function EditorPage() {
         const t1 = setTimeout(() => {
             console.log("active")
             updateNote({
-                id: id,
+                id: id as string,
                 body: content,
             })
             setSavingState("Enregistré!")
@@ -60,26 +70,142 @@ export default function EditorPage() {
         })
     }
 
+    // const Correction = useCallback(async () => {
+    //     const content_html_editor = editorRef.current?.querySelector(".simple-editor")
+    //     console.log(content_html_editor?.innerHTML)
+
+    //     if (content_html_editor !== undefined) {
+    //         const texte_corriger = await window.api.aicorrectagent(content_html_editor as string)
+
+
+    //         content_html_editor.innerHTML = texte_corriger.text
+
+    //     }
+    //     // const texte_corriger = await window.api.aicorrectagent(content_html_editor as string)
+    // }, [editorRef.current])
+
+    useEffect(() => {
+        // Correction()
+        console.log("marche")
+    }, [editorRef.current, isTyping])
+
+
+
     return (
         <div className="flex-1 overflow-hidden w-full h-full relative">
             {
                 content.length > 0 && (
                     <SimpleEditor
                         content={content}
+
                         onChange={(data) => {
                             setIsTyping(true)
                             setContent(data)
                         }}
                         onBack={handlegoback}
+                        ref={editorRef}
                     />
                 )
             }
             <SheetDemo />
+            <Toaster position="bottom-center" />
         </div>
     )
 }
 
 export function SheetDemo() {
+    const { id } = useParams()
+    const { notesQuery } = useDatabase();
+    const [title, setTitle] = useState<string>("")
+    const [body, setBody] = useState<string>("")
+    const [history, setHistory] = useState<AiHistoryType[] | null>(null);
+    const [inputValue, setInputValue] = useState<string>("")
+
+    // Ref pour le conteneur de scroll et l'élément de fin
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const titre = useCallback(() => {
+        const note = notesQuery && notesQuery.where(note => note.id === id)
+        if (note && note.length > 0) {
+            const data = note[0]
+            const body = JSON.parse(data?.body)
+            console.log(body)
+            setBody(data?.body || "")
+            if (body && body.content && body.content.length > 0) {
+                if (body.content[0].type === "heading" && body.content[0].content) {
+                    setTitle(body.content[0].content[0].text || "Note sans titre")
+                }
+            }
+        }
+    }, [id, notesQuery])
+
+    const history_ai = new QueryForTable<AiHistoryType>()
+
+    useEffect(() => {
+        titre()
+    }, [titre])
+
+    // Fonction pour scroller vers le bas
+    const scrollToBottom = useCallback(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+        }
+        // Alternative avec scrollIntoView
+        // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, []);
+
+    // Scroller vers le bas à chaque changement de l'historique
+    useEffect(() => {
+        if (history && history.length > 0) {
+            // Petit délai pour s'assurer que le DOM est mis à jour
+            setTimeout(() => {
+                scrollToBottom();
+            }, 50);
+        }
+    }, [history, scrollToBottom]);
+
+    const agent = useCallback(async (prompt: string) => {
+        const response = await window.api.agent({
+            content: body,
+            iduser: id as string
+        }, prompt);
+        return response;
+    }, [body]);
+
+    useEffect(() => {
+        async function fetch_ai_history() {
+            const ai_history = await window.api.db.getaihistory(id as string)
+            console.log(ai_history)
+            history_ai.addMany(ai_history)
+            setHistory(history_ai.findAll())
+        }
+        fetch_ai_history()
+    }, [])
+
+    const handleAgent = async () => {
+        // Ajouter immédiatement le message de l'utilisateur pour un feedback instantané
+        const userMessage = { role: "user", content: inputValue };
+        const currentHistory = history || [];
+        const newMessage = [...currentHistory, userMessage];
+        setHistory(newMessage);
+
+        const response = await agent(inputValue);
+
+        setHistory((el) => [...el, { id: uuidv4(), ...response.history.slice(-1)[0], created: new Date().toISOString(), modified: new Date().toISOString() }]);
+        setInputValue("")
+    };
+
+    // Gestion de l'envoi avec Enter
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            if (inputValue.trim()) {
+                handleAgent();
+            }
+        }
+    };
+
     return (
         <Sheet>
             <SheetTrigger asChild>
@@ -89,29 +215,72 @@ export function SheetDemo() {
             </SheetTrigger>
             <SheetContent>
                 <SheetHeader>
-                    <SheetTitle>Assistant Intelligent</SheetTitle>
                     <SheetDescription>
-                        Assistant aide a redaction selon le contexte :
+                        Assistant - Context :
                     </SheetDescription>
-                </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4">
-                    <div className="grid gap-3">
-                        <Label htmlFor="sheet-demo-name">Name</Label>
-                        {/* <Input id="sheet-demo-name" defaultValue="Pedro Duarte" /> */}
+                    <div>
+                        <SheetTitle className="text-lg font-semibold">
+                            {title.length > 35 ? `${title.substring(0, 35)}...` : title}
+                        </SheetTitle>
                     </div>
-                    <div className="grid gap-3">
-                        <Label htmlFor="sheet-demo-username">Username</Label>
-                        {/* <Input id="sheet-demo-username" defaultValue="@peduarte" /> */}
+                </SheetHeader>
+
+                <div className="h-[calc(100vh-75px)] relative">
+                    {/* Conteneur de scroll avec ref */}
+                    <div
+                        ref={scrollContainerRef}
+                        className="h-full overflow-y-auto"
+                        style={{ scrollBehavior: 'smooth' }}
+                    >
+                        <div className="flex flex-col overflow-x-hidden pl-4 py-4 pr-2 max-w-none gap-2">
+                            {history?.map((item, index) => {
+                                return item.role === "user"
+                                    ? (
+                                        <div
+                                            key={index}
+                                            className="question w-full rounded-xs bg-blue-50 px-3 py-2 text-left font-semibold text-[14px] flex flex-col gap-1"
+                                        >
+                                            {item.content}
+                                            <span className="text-xs font-normal">{moment(item.created).fromNow()}</span>
+                                        </div>
+                                    )
+                                    : (
+                                        <div
+                                            key={index}
+                                            className="reponse mb-3 px-1"
+                                            dangerouslySetInnerHTML={{ __html: marked.parse(item.content) }}
+                                        />
+                                    );
+                            })}
+
+                            {/* Élément invisible pour marquer la fin des messages */}
+                            <div ref={messagesEndRef} className="h-0" />
+
+                            {/* Espacement pour éviter que le dernier message soit caché par l'input */}
+                            <div className="h-[50px]" />
+                        </div>
+                    </div>
+
+                    {/* Input fixé en bas */}
+                    <div className="p-3 absolute bottom-0 left-0 w-full z-50">
+                        <div className="w-full flex items-start gap-2 border rounded-lg p-2 border-slate-200 bg-white shadow-xl">
+                            <Textarea
+                                placeholder="Écrire ici..."
+                                className="min-h-[48px] max-h-[124px] border-none outline-none px-1 resize-none"
+                                value={inputValue}
+                                onChange={({ target }) => setInputValue(target.value)}
+                                onKeyPress={handleKeyPress}
+                            />
+                            <button
+                                onClick={handleAgent}
+                                disabled={!inputValue.trim()}
+                                className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 flex items-center justify-center w-[48px] aspect-square rounded-full text-white shadow-lg scale-100 active:scale-95 transition-transform ease-in-out"
+                            >
+                                <FluentArrowUp32Filled className="w-6 h-6" />
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <SheetFooter>
-                    <div>
-                        <p className="text-sm text-muted-foreground">Powered by GPT-4</p>
-                    </div>
-                    <SheetClose asChild>
-                        <Button variant="outline">Close</Button>
-                    </SheetClose>
-                </SheetFooter>
             </SheetContent>
         </Sheet>
     )

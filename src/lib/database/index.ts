@@ -302,11 +302,61 @@ export function deleteSession(id: string): Boolean | null {
   return session;
 }
 
+export interface AiHistoryType {
+  id: string;
+  iduser: string;
+  role: string;
+  content: string;
+  created: Date;
+  modified: Date;
+}
+
+const AIhistory = db.createModel<AiHistoryType>("aihistory", {
+  id: "TEXT PRIMARY KEY NOT NULL",
+  iduser: "TEXT NOT NULL",
+  role: "TEXT NOT NULL",
+  content: "TEXTNOT NULL",
+  created: "DATETIME DEFAULT CURRENT_TIMESTAMP",
+  modified: "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+});
+
+const createHistoryTable = async () => {
+  await AIhistory.createTable();
+};
+
+export function getAiHistory(id: string): AiHistoryType[] | null | [] {
+  try {
+    const result = AIhistory.where({ iduser: id }).findAll();
+    if (!result) return [];
+    return result;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setAiHistory(data: AiHistoryType): AiHistoryType | null {
+  const history = AIhistory.create({
+    id: uuidv4() as string,
+    iduser: data.iduser as string,
+    role: data.role,
+    content: data.content,
+    created: new Date(),
+    modified: new Date(),
+  });
+
+  return history;
+}
+
+export function deleteHistory(id: string) {
+  return AIhistory.delete(id);
+}
+
 export {
   createNotesTable,
   createGroupTable,
   createUserTable,
   createSessionTable,
+  createHistoryTable,
 };
 
 // Exemple d'utilisation avec export des clés et types
