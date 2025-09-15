@@ -6,7 +6,6 @@ import { useDatabase } from "../../communs/context/databaseprovide";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "../../../components/ui/sheet";
 import { FluentArrowUp32Filled, FluentSlideTextSparkle32Regular } from "../../lib/icons";
 import { Textarea } from "../../../components/ui/textarea"
-import { QueryBuilder } from "../../../src/communs/context/QueryBuilder";
 import { AiHistoryType } from "../../../src/lib/database";
 import { QueryForTable } from "../../../src/communs/context/Queryuilder_2";
 import { marked } from "marked";
@@ -23,7 +22,7 @@ export default function EditorPage() {
     const [savingState, setSavingState] = useState('Enregistrement...')
     const { updateNote } = useDatabase()
     const editorRef = useRef<HTMLDivElement>(null)
-    const [corriger, setCorriger] = useState(content)
+    // const [corriger, setCorriger] = useState(content)
 
     const getinitnote = useCallback(async () => {
         const noteid = location.state.note.id
@@ -84,10 +83,10 @@ export default function EditorPage() {
     //     // const texte_corriger = await window.api.aicorrectagent(content_html_editor as string)
     // }, [editorRef.current])
 
-    useEffect(() => {
-        // Correction()
-        console.log("marche")
-    }, [editorRef.current, isTyping])
+    // useEffect(() => {
+    //     // Correction()
+    //     console.log("marche")
+    // }, [editorRef.current, isTyping])
 
 
 
@@ -130,7 +129,7 @@ export function SheetDemo() {
         if (note && note.length > 0) {
             const data = note[0]
             const body = JSON.parse(data?.body)
-            console.log(body)
+
             setBody(data?.body || "")
             if (body && body.content && body.content.length > 0) {
                 if (body.content[0].type === "heading" && body.content[0].content) {
@@ -152,7 +151,7 @@ export function SheetDemo() {
             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
         }
         // Alternative avec scrollIntoView
-        // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
 
     // Scroller vers le bas à chaque changement de l'historique
@@ -176,7 +175,6 @@ export function SheetDemo() {
     useEffect(() => {
         async function fetch_ai_history() {
             const ai_history = await window.api.db.getaihistory(id as string)
-            console.log(ai_history)
             history_ai.addMany(ai_history)
             setHistory(history_ai.findAll())
         }

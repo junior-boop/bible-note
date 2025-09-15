@@ -7,31 +7,32 @@ import type { Notes as NotesType } from "../../lib/database/db";
 import { useDatabase } from "../../communs/context/databaseprovide";
 import SearchBar from "../../../src/communs/searchbar";
 
-export default function NotesPages() {
-
+export default function Accueil() {
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
     const { notesQuery } = useDatabase();
 
     const notes = notesQuery?.where(note => note.archived === 0 && note.pinned === 0);
     const notepinned = notesQuery?.where(note => note.archived === 0 && note.pinned === 1);
 
-
+    const handlesearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+        if (e.target.value.length > 0) {
+            setIsSearching(true);
+        } else {
+            setIsSearching(false);
+        }
+    }
 
     return (
         <div className="w-full h-dvh">
             <SearchBar />
-            <div className="py-4 overflow-y-scroll h-[calc(100dvh-64px)] pr-3 pl-8">
-                <Title title="Notes" />
+            <div className="py-4 overflow-y-scroll h-[calc(100dvh-64px)] pl-8 pr-3">
+                <Title title="Articles" />
                 <div>
                     La liste des notes sera affichée ici.
                 </div>
-                {
-                    notepinned && notepinned.length > 0 && (<>
-                        <div className="mt-8"><Subtitle title="Notes épinglés" /></div>
-                        <div className="px-2">
-                            <Noteliste data={notepinned as NotesType[]} />
-                        </div>
-                    </>)
-                }
+
                 {
                     notes && notes.length > 0 && (<>
                         {notes.length >= 1 ? <div className="mt-8"><Subtitle title="Toutes les notes" /></div> : <div className="mt-8"><Subtitle title="Autres" /></div>}

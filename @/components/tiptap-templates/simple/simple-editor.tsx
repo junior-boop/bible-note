@@ -419,6 +419,7 @@ const AddBibleVerset = ({ editor }: { editor: Editor }) => {
 
       >
         <BibleVersetIcon className="h-4 w-4" />
+        <span>Bible</span>
       </Button>
       {openVerset && <InputVerset onBlur={handleOpen} />}
     </div>
@@ -561,11 +562,16 @@ const DossierButton = ({ editor }: { editor: Editor }) => {
 
 export function Whatsappbutton({ editor }: { editor: Editor }) {
   const [copiedText, copyToClipboard] = useCopyToClipboard();
-  const handleOpen = () => {
-    htmlToWhatsApp(editor.getHTML())
-
+  const handleOpen = async () => {
+    const copy = htmlToWhatsApp(editor.getHTML())
+    console.log(copy)
+    await copyToClipboard(copy)
     const hasCopiedText = Boolean(copiedText);
-    toast("Event has been created.")
+    console.log(hasCopiedText)
+    toast("Le contenu est copié", {
+      description: "Le contenu de cette notes est dans le presse-papier"
+    })
+
   }
   return (
     <Button
@@ -582,7 +588,7 @@ export function Whatsappbutton({ editor }: { editor: Editor }) {
       onClick={handleOpen}
 
     > <IcSharpWhatsapp className="h-5 w-5" />
-      <span>whatsapp</span>
+      {/* <span>whatsapp</span> */}
     </Button>
   )
 }
@@ -657,13 +663,16 @@ function htmlToWhatsApp(htmlString: string) {
 
 
           const verset = window.api.bible({ livre: spliter[0] as string, chap: spliter[1] as string, vers1: spliter[2], vers2: spliter[3] })
-          let result = `*${verset?.reference}* \n > `
+          let result = `*${verset?.reference}* \n> `
           if (verset) {
             for (let vers of verset.vers) {
               const construct = `[${vers.n}] ${vers?.v} `
               result += construct
             }
+
+            result += "\n\n"
           }
+
 
 
           return result;

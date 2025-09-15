@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useParams, } from 'react-router-dom';
-import { FluentArchive32Filled, FluentArchive32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentNoteAdd28Regular, FluentPerson32Filled, FluentPerson32Regular, FluentSettings32Filled, FluentSettings32Regular } from '../../lib/icons';
+import { FluentArchive32Filled, FluentArchive32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentNoteAdd28Regular, FluentNotepad32Filled, FluentNotepad32Regular, FluentPerson32Filled, FluentPerson32Regular, FluentSettings32Filled, FluentSettings32Regular } from '../../lib/icons';
 import { useNavigate } from 'react-router-dom';
 import { Notes } from '../../lib/database/db';
-import { useGlobalContext } from '../context/global';
 import { useDatabase } from '../context/databaseprovide';
 
 export default function Screen() {
@@ -17,7 +16,6 @@ export default function Screen() {
         if (location.pathname.includes('archives')) {
             setOnNote(true)
         }
-
         if (location.pathname.includes("groupes") && !location.pathname.includes("dossier")) {
             setOnNote(true)
         }
@@ -29,11 +27,12 @@ export default function Screen() {
     }, [location])
     return (
         <div className="flex w-full h-dvh relative ">
-            <div className='w-[62px] h-full bg-gray-100 border-r border-gray-300 relative'>
+            <div className='w-[62px] h-full bg-white relative'>
                 <div>
                     <div className='h-[72px]'></div>
                     <div className='flex flex-col items-center gap-2'>
                         <NavItems icon={(actives) => actives ? <FluentHome32Filled className=" h-6 w-6 text-slate-800" /> : <FluentHome32Regular className='h-6 w-6' />} url="/" />
+                        <NavItems icon={(actives) => actives ? <FluentNotepad32Filled className=" h-6 w-6 text-slate-800" /> : <FluentNotepad32Regular className='h-6 w-6' />} url="/todos" />
                         <NavItems icon={(actives) => actives ? <FluentDocumentFolder32Filled className=" h-6 w-6 text-slate-800" /> : <FluentDocumentFolder32Regular className='h-6 w-6' />} url="/groupes" />
                         <NavItems icon={(actives) => actives ? <FluentArchive32Filled className=" h-6 w-6 text-slate-800" /> : <FluentArchive32Regular className='h-6 w-6' />} url="/archives" />
                         <NavItems icon={(actives) => actives ? <FluentSettings32Filled className=" h-6 w-6 text-slate-800" /> : <FluentSettings32Regular className='h-6 w-6' />} url="/settings" />
@@ -89,7 +88,7 @@ function NewNote() {
     }
 
 
-    return (<button onClick={handleNewNote} className='bg-slate-200 text-black h-[50px] px-6 rounded-4xl absolute z-10 bottom-4 left-[78px] flex items-center gap-2 hover:bg-slate-800 hover:text-white transition-all ease-in-out duration-300 shadow-md'>
+    return (<button onClick={handleNewNote} className='bg-fuchsia-100 text-fuchsia-950 h-[50px] px-6 rounded-4xl absolute font-semibold z-10 bottom-4 left-[78px] flex items-center gap-2 hover:bg-fuchsia-800 hover:text-white transition-all ease-in-out duration-300 shadow-md shadow-fuchsia-900/25'>
         <FluentNoteAdd28Regular className='h-6 w-6' />
         Ajouter une note</button>
 

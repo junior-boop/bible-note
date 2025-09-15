@@ -75,8 +75,8 @@ export function AsideList() {
     const handleGroupeList = groupedQuery?.orderBy("modified", "desc")
 
     return (
-        <div className="w-[250px] h-full border-r border-slate-300 bg-slate-50">
-            <div className="h-[56px] px-4 flex items-center border-b border-slate-200">
+        <div className="w-[250px] h-full bg-white border-r border-slate-100 p-3">
+            <div className="h-[56px] px-4 flex items-center  bg-slate-100 rounded-xl">
                 <div className="flex w-full">
                     <input value={groupName as string} onChange={({ target }) => setGroupName(target.value)} type="text" className="focus:outline-none flex-1 w-[180px]" placeholder="Ajouter un dossier" />
                     <button onClick={handleNewGroup} className="w-[42px] h-[42px] flex items-center justify-center">
@@ -84,13 +84,13 @@ export function AsideList() {
                     </button>
                 </div>
             </div>
-            <div className="h-[92px] flex items-center px-4">
+            <div className="h-[92px] flex items-center">
                 <div>
                     <Title title="Dossiers" />
                     <div className=" text-sm text-gray-200">Liste de Dossiers</div>
                 </div>
             </div>
-            <div>
+            <div >
                 {
                     handleGroupeList?.map((el, key) => <GroupeItems data={el} key={key} />)
                 }
@@ -124,7 +124,7 @@ const GroupeUpdate = ({ data, onClick }: { onClick: () => void }) => {
     }
 
     return (
-        <div className="px-4 py-3 hover:bg-slate-200 flex items-center">
+        <div className="px-4 py-4 hover:bg-blue-200 flex items-center rounded-xl">
             <input multiple value={change} onChange={({ target }) => setChange(target.value)} className="focus:outline-none border-b" />
             <button onClick={handleUpdateGroup}>
                 <FluentCheckmark32Regular className="h-5 w-5" />
@@ -159,17 +159,17 @@ const Items = ({ data, onClick }: { onClick: () => void }) => {
         } else setIsLocate(false)
     }, [location, id])
     return (
-        <div className="dossierItem px-4 py-3 hover:bg-slate-200 relative flex items-center">
+        <div className={`dossierItem px-4 py-3 hover:bg-blue-100 relative flex items-center rounded-xl ${isLocate ? "bg-blue-100" : ""}`}>
             <NavLink to={`/groupes/dossier/${data.id}`} state={data} className='flex items-center gap-2 justify-between w-full'>
                 <span className={`flex-1 ${isLocate ? "font-bold" : ""}`}>
                     {data.name}
                 </span>
 
-                {isLocate && <span className="w-[12px] h-[12px] rounded-full bg-slate-800"></span>}
+                {isLocate && <span className="w-[12px] h-[12px] rounded-full bg-blue-800"></span>}
 
             </NavLink>
 
-            <div className="itemsMenu absolute right-0 flex gap-3 px-3 py-2 bg-slate-200">
+            <div className="itemsMenu absolute right-0 flex gap-3 px-3 py-2 bg-blue-100">
                 <button onClick={onClick}>
                     <FluentEdit32Regular className="h-5 w-5" />
                 </button>

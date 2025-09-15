@@ -9,6 +9,8 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import MainLogin from './login';
 import GlobalProvider, { useGlobalContext } from '../communs/context/global';
 import { DatabaseProvider } from '../communs/context/databaseprovide';
+import Accueil from './accueil';
+import Settings from './setting';
 
 
 
@@ -24,12 +26,13 @@ const Router = () => {
     return (
       <Routes>
         <Route element={<Screen />}>
-          <Route path="/" element={<NotesPages />} />
+          <Route path="/" element={<Accueil />} />
+          <Route path="/todos" element={<NotesPages />} />
           <Route path="/archives" element={<ArchivePages />} />
           <Route path="/groupes" element={<GroupeLayouts />}>
             <Route path="/groupes/dossier/:id" element={<DossierPage />} />
           </Route>
-          <Route path="/settings" element={<div>Settings</div>} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<div>Profile</div>} />
           <Route path="/note/:id" element={<EditorPage />} />
         </Route>
