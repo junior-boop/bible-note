@@ -123,6 +123,8 @@ export function SheetDemo() {
     // Ref pour le conteneur de scroll et l'élément de fin
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContent = useRef<HTMLDivElement>(null);
+
 
     const titre = useCallback(() => {
         const note = notesQuery && notesQuery.where(note => note.id === id)
@@ -150,9 +152,12 @@ export function SheetDemo() {
         if (scrollContainerRef.current) {
             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
         }
+        scrollContainerRef.current?.addEventListener('scroll', () => {
+            console.log(scrollContainerRef.current?.scrollTop)
+        })
         // Alternative avec scrollIntoView
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, []);
+    }, [scrollContainerRef.current]);
 
     // Scroller vers le bas à chaque changement de l'historique
     useEffect(() => {
@@ -162,7 +167,7 @@ export function SheetDemo() {
                 scrollToBottom();
             }, 50);
         }
-    }, [history, scrollToBottom]);
+    }, [history, scrollToBottom, scrollContainerRef.current]);
 
     const agent = useCallback(async (prompt: string) => {
         const response = await window.api.agent({
@@ -204,10 +209,14 @@ export function SheetDemo() {
         }
     };
 
+    const handleOpen = () => {
+        scrollToBottom();
+    }
+
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <button className="absolute bottom-8 right-8 bg-blue-500 hover:bg-blue-600 flex items-center justify-center w-[52px] aspect-square rounded-full text-white shadow-lg">
+                <button onClick={handleOpen} className="absolute bottom-8 right-8 bg-blue-500 hover:bg-blue-600 flex items-center justify-center w-[52px] aspect-square rounded-full text-white shadow-lg">
                     <FluentSlideTextSparkle32Regular className="w-6 h-6" />
                 </button>
             </SheetTrigger>
@@ -230,7 +239,7 @@ export function SheetDemo() {
                         className="h-full overflow-y-auto"
                         style={{ scrollBehavior: 'smooth' }}
                     >
-                        <div className="flex flex-col overflow-x-hidden pl-4 py-4 pr-2 max-w-none gap-2">
+                        <div ref={messagesContent} className="chat-container flex flex-col overflow-x-scroll pl-4 py-4 pr-2 max-w-none gap-2">
                             {history?.map((item, index) => {
                                 return item.role === "user"
                                     ? (

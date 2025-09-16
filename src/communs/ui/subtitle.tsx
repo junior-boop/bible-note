@@ -1,6 +1,8 @@
-export default function Subtitle({ title }: { title: string }) {
+import { cn } from "../../../src/lib/utils";
+
+export default function Subtitle({ title, className }: { title: string, className?: string }) {
     return (
-        <div className="flex items-center justify-between mb-2">
+        <div className={cn("flex items-center justify-between mb-2", className)}>
             <h2 className="text-sm font-bold uppercase">{title}</h2>
         </div>
     );

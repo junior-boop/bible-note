@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('api', {
     addnotetogroup : (data) => ipcRenderer.invoke("add-note-to-group", data), 
     setnote : (data) => ipcRenderer.invoke("set-note", data),
     deletenote : (id) => ipcRenderer.invoke("delete-note", id),
-    getuserinfos : () => ipcRenderer.invoke("get-user-infos"),
+    getuserinfos : (id) => ipcRenderer.invoke("get-user-infos", id),
     getsession : () => ipcRenderer.invoke("get-session"),
     setsession : (data) => ipcRenderer.invoke("set-session", data),
     deletesession : () => ipcRenderer.invoke("delete-session"),

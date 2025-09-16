@@ -84,7 +84,7 @@ export default function NoteItems({ data }: { data: Notes }) {
     }
 
     useEffect(() => {
-        const locationNote = location.pathname === "/"
+        const locationNote = location.pathname === "/todos"
 
         if (locationNote) {
             setIshome(true)

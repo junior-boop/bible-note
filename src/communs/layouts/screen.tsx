@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useParams, } from 'react-router-dom';
-import { FluentArchive32Filled, FluentArchive32Regular, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentNoteAdd28Regular, FluentNotepad32Filled, FluentNotepad32Regular, FluentPerson32Filled, FluentPerson32Regular, FluentSettings32Filled, FluentSettings32Regular } from '../../lib/icons';
+import { FluentArchive32Filled, FluentArchive32Regular, FluentArrowDownload32Filled, FluentDocumentFolder32Filled, FluentDocumentFolder32Regular, FluentHome32Filled, FluentHome32Regular, FluentNoteAdd28Regular, FluentNotepad32Filled, FluentNotepad32Regular, FluentPerson32Filled, FluentPerson32Regular, FluentSettings32Filled, FluentSettings32Regular } from '../../lib/icons';
 import { useNavigate } from 'react-router-dom';
 import { Notes } from '../../lib/database/db';
 import { useDatabase } from '../context/databaseprovide';
@@ -23,6 +23,8 @@ export default function Screen() {
             setOnNote(false)
         }
 
+        if (location.pathname.includes("settings")) setOnNote(true)
+
         console.log(location.pathname)
     }, [location])
     return (
@@ -35,11 +37,12 @@ export default function Screen() {
                         <NavItems icon={(actives) => actives ? <FluentNotepad32Filled className=" h-6 w-6 text-slate-800" /> : <FluentNotepad32Regular className='h-6 w-6' />} url="/todos" />
                         <NavItems icon={(actives) => actives ? <FluentDocumentFolder32Filled className=" h-6 w-6 text-slate-800" /> : <FluentDocumentFolder32Regular className='h-6 w-6' />} url="/groupes" />
                         <NavItems icon={(actives) => actives ? <FluentArchive32Filled className=" h-6 w-6 text-slate-800" /> : <FluentArchive32Regular className='h-6 w-6' />} url="/archives" />
-                        <NavItems icon={(actives) => actives ? <FluentSettings32Filled className=" h-6 w-6 text-slate-800" /> : <FluentSettings32Regular className='h-6 w-6' />} url="/settings" />
+                        <NavItems icon={(actives) => actives ? <FluentArrowDownload32Filled className=" h-6 w-6 text-slate-800" /> : <FluentArrowDownload32Filled className='h-6 w-6' />} url="/telechargements" />
                     </div>
                 </div>
                 <div className='flex flex-col items-center gap-2 absolute bottom-4 w-full'>
-                    <NavItems icon={(actives) => actives ? <FluentPerson32Filled className=" h-6 w-6 text-slate-800" /> : <FluentPerson32Regular className='h-6 w-6' />} url="/profile" />
+                    <NavItems icon={(actives) => actives ? <FluentSettings32Filled className=" h-6 w-6 text-slate-800" /> : <FluentSettings32Regular className='h-6 w-6' />} url="/settings" />
+
                 </div>
             </div>
             <div className='flex-1 w-full h-full overflow-hidden relative'>

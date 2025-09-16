@@ -134,7 +134,7 @@ declare global {
           id: string;
           grouped: string;
         }) => Promise<Notes>;
-        getuserinfos: () => Promise<string>;
+        getuserinfos: (id: string) => Promise<User>;
         getsession: () => Promise<usersession[] | []>;
         setsession: (data: User) => Promise<{
           id: string;

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { addNoteToGroup, checkDatabase, createGroupTable, createHistoryTable, createNotesTable, createSessionTable, createUserTable, deletedGroup, deleteNote, deleteSession, getAiHistory, getAllNotes, getGroups, getNoteById, getNotesArchived, getNotesPinned, getSession, setAiHistory, setGroup, setNote, setNotePinned, setNotesArchived, setSession, setUser, updatedGroup, updateNote } from './lib/database';
+import { addNoteToGroup, checkDatabase, createGroupTable, createHistoryTable, createNotesTable, createSessionTable, createUserTable, deletedGroup, deleteNote, deleteSession, getAiHistory, getAllNotes, getGroups, getNoteById, getNotesArchived, getNotesPinned, getSession, getUser, setAiHistory, setGroup, setNote, setNotePinned, setNotesArchived, setSession, setUser, updatedGroup, updateNote } from './lib/database';
 import { GeminiChat } from './app/notes/googleapi';
 import { GeminiCorrection } from './correction';
 
@@ -147,16 +147,8 @@ ipcMain.handle('set-external-data', async (event, data) => {
   return await setUser(result.data)
 });
 
-ipcMain.handle("get-user-infos",  (id) => {
-  return new Promise((res, rej) => {
-    getUser(id, (data) => {
-      if (data) {
-        res(data);
-      } else {
-        rej(new Error('Failed to fetch user data'));
-      }
-    });
-  });
+ipcMain.handle("get-user-infos",  async (eveent, id) => {
+  return await getUser(id)
 });
 
 ipcMain.handle("get-external-data", async (event) => {

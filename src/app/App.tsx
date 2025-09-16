@@ -33,7 +33,7 @@ const Router = () => {
             <Route path="/groupes/dossier/:id" element={<DossierPage />} />
           </Route>
           <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<div>Profile</div>} />
+          <Route path="/telechargements" element={<div>Profile</div>} />
           <Route path="/note/:id" element={<EditorPage />} />
         </Route>
       </Routes>
