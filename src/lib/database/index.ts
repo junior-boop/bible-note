@@ -1,5 +1,5 @@
 // @ts-ignore
-import { ModelFactory, SimpleORM } from "../simpleorm";
+import { ModelFactory, SimpleORM } from "../simpleorm/simpleorm-sync";
 import {
   type Session as SessionType,
   type Notes as NotesType,

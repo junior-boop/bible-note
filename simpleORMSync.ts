@@ -1,10 +1,10 @@
 import Database from "better-sqlite3";
-import { SyncQueue } from "./src/lib/SyncQueue";
+import { SyncQueue } from "./src/lib/simpleorm/SyncQueue";
 import {
   handleInsertOperation,
   handleUpdateOperation,
   handleDeleteOperation,
-} from "./src/lib/database-operations";
+} from "./src/lib/simpleorm/database-operations";
 
 export interface QueryResult {
   lastInsertRowid?: number;
